@@ -100,6 +100,8 @@ public partial class Backend_WaterDeviceStateLog : System.Web.UI.Page
                         }
                         catch
                         {
+                            var tmpstate = (WaterDeviceState)logentry;
+                            statetable.Add(tmpstate);
                             telemetrytable.Add(logentry);
                         }
                         dc.SaveChanges();
