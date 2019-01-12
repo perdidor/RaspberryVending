@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<edmx:Edmx Version="3.0" xmlns:edmx="http://schemas.microsoft.com/ado/2009/11/edmx">
+ <!-- EF Designer content (DO NOT EDIT MANUALLY BELOW HERE) -->
+  <edmx:Designer xmlns="http://schemas.microsoft.com/ado/2009/11/edmx">
+    <!-- Diagram content (shape and connector positions) -->
+    <edmx:Diagrams>
+      <Diagram DiagramId="f0382c69ec8646e5ad606c889540ded6" Name="Diagram1" >
+        <EntityTypeShape EntityType="VendingModel.Accounts" Width="1.875" PointX="0.5" PointY="0.5" IsExpanded="false" />
+        <EntityTypeShape EntityType="VendingModel.WaterSales" Width="2.125" PointX="5.375" PointY="0.5" IsExpanded="false" />
+        <EntityTypeShape EntityType="VendingModel.WaterDeviceCommands" Width="2" PointX="10.25" PointY="0.5" IsExpanded="false" />
+        <EntityTypeShape EntityType="VendingModel.WaterDeviceIncasso" Width="1.75" PointX="12.375" PointY="0.5" IsExpanded="false" />
+        <EntityTypeShape EntityType="VendingModel.WaterDevices" Width="2.75" PointX="2.5" PointY="0.5" IsExpanded="false" />
+        <EntityTypeShape EntityType="VendingModel.WaterDeviceTelemetry" Width="2.5" PointX="7.625" PointY="0.5" IsExpanded="false" />
+        <EntityTypeShape EntityType="VendingModel.CryptoKeys" Width="1.875" PointX="0.5" PointY="1.25" IsExpanded="false" />
+        <EntityTypeShape EntityType="VendingModel.WebSettings" Width="2.75" PointX="2.5" PointY="1.25" IsExpanded="false" />
+        <EntityTypeShape EntityType="VendingModel.AccountLog" Width="2.125" PointX="5.375" PointY="1.25" IsExpanded="false" />
+        <EntityTypeShape EntityType="VendingModel.SystemLog" Width="2.5" PointX="7.625" PointY="1.25" IsExpanded="false" />
+        <EntityTypeShape EntityType="VendingModel.WaterDeviceState" Width="2" PointX="10.25" PointY="1.25" IsExpanded="false" />
+      </Diagram>
+    </edmx:Diagrams>
+  </edmx:Designer>
+</edmx:Edmx>

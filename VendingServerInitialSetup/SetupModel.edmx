@@ -1,0 +1,235 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<edmx:Edmx Version="3.0" xmlns:edmx="http://schemas.microsoft.com/ado/2009/11/edmx">
+  <!-- EF Runtime content -->
+  <edmx:Runtime>
+    <!-- SSDL content -->
+    <edmx:StorageModels>
+      <Schema Namespace="Хранилище VendingModel" Provider="System.Data.SqlClient" ProviderManifestToken="2012" Alias="Self" xmlns:store="http://schemas.microsoft.com/ado/2007/12/edm/EntityStoreSchemaGenerator" xmlns:customannotation="http://schemas.microsoft.com/ado/2013/11/edm/customannotation" xmlns="http://schemas.microsoft.com/ado/2009/11/edm/ssdl">
+        <EntityType Name="Accounts">
+          <Key>
+            <PropertyRef Name="ID" />
+          </Key>
+          <Property Name="ID" Type="bigint" StoreGeneratedPattern="Identity" Nullable="false" />
+          <Property Name="UserID" Type="varchar" MaxLength="50" Nullable="false" />
+          <Property Name="PasswordHash" Type="varchar(max)" Nullable="false" />
+          <Property Name="TOTPSecret" Type="varchar" MaxLength="50" Nullable="false" />
+          <Property Name="RegistrationDateTime" Type="bigint" Nullable="false" />
+          <Property Name="RegistrationDateTimeStr" Type="varchar" MaxLength="50" Nullable="false" />
+          <Property Name="Valid" Type="bit" Nullable="false" />
+          <Property Name="Suspended" Type="bit" Nullable="false" />
+          <Property Name="DeviceCountLimit" Type="int" Nullable="false" />
+          <Property Name="PaidTillDateTime" Type="bigint" Nullable="false" />
+          <Property Name="PaidTillDateTimeStr" Type="varchar" MaxLength="50" Nullable="false" />
+          <Property Name="DefaultContactPhone" Type="varchar" MaxLength="50" Nullable="false" />
+          <Property Name="LicenseContent" Type="varchar(max)" Nullable="false" />
+        </EntityType>
+        <EntityType Name="CryptoKeys">
+          <Key>
+            <PropertyRef Name="ID" />
+          </Key>
+          <Property Name="ID" Type="bigint" StoreGeneratedPattern="Identity" Nullable="false" />
+          <Property Name="PrivateKey" Type="varbinary(max)" Nullable="false" />
+          <Property Name="PublicKey" Type="varbinary(max)" Nullable="false" />
+        </EntityType>
+        <EntityType Name="SystemLog">
+          <Key>
+            <PropertyRef Name="ID" />
+          </Key>
+          <Property Name="ID" Type="bigint" StoreGeneratedPattern="Identity" Nullable="false" />
+          <Property Name="DateTime" Type="bigint" Nullable="false" />
+          <Property Name="DateTimeStr" Type="varchar" MaxLength="50" Nullable="false" />
+          <Property Name="IPAddress" Type="varchar" MaxLength="50" Nullable="false" />
+          <Property Name="EventText" Type="varchar(max)" Nullable="false" />
+          <Property Name="Description" Type="varchar(max)" Nullable="false" />
+          <Property Name="UserID" Type="varchar(max)" Nullable="false" />
+        </EntityType>
+        <EntityType Name="WebSettings">
+          <Key>
+            <PropertyRef Name="ID" />
+          </Key>
+          <Property Name="ID" Type="bigint" StoreGeneratedPattern="Identity" Nullable="false" />
+          <Property Name="AdminEmail" Type="varchar(max)" Nullable="false" />
+          <Property Name="SiteName" Type="varchar(max)" Nullable="false" />
+          <Property Name="ServerEndPoint" Type="varchar(max)" Nullable="false" />
+          <Property Name="MailFromAddress" Type="varchar(max)" Nullable="false" />
+          <Property Name="EMailDisplayName" Type="varchar(max)" Nullable="false" />
+          <Property Name="RegDeviceMailSubject" Type="varchar(max)" Nullable="false" />
+          <Property Name="RegAccountMailSubject" Type="varchar(max)" Nullable="false" />
+          <Property Name="MailUseSMTPAuth" Type="bit" Nullable="false" />
+          <Property Name="MailLogin" Type="varchar(max)" Nullable="false" />
+          <Property Name="MailPassword" Type="varchar(max)" Nullable="false" />
+          <Property Name="SMTPHost" Type="varchar(max)" Nullable="false" />
+          <Property Name="SMTPPort" Type="int" Nullable="false" />
+          <Property Name="SMTPUseSSL" Type="bit" Nullable="false" />
+          <Property Name="BingMapsAPIKey" Type="varchar(max)" Nullable="false" />
+          <Property Name="LastSavedDateTimeStr" Type="varchar" MaxLength="50" Nullable="false" />
+        </EntityType>
+        <EntityContainer Name="Хранилище VendingModelContainer">
+          <EntitySet Name="Accounts" EntityType="Self.Accounts" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="CryptoKeys" EntityType="Self.CryptoKeys" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="SystemLog" EntityType="Self.SystemLog" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="WebSettings" EntityType="Self.WebSettings" Schema="dbo" store:Type="Tables" />
+        </EntityContainer>
+      </Schema>
+    </edmx:StorageModels>
+    <!-- CSDL content -->
+    <edmx:ConceptualModels>
+      <Schema Namespace="VendingModel" Alias="Self" annotation:UseStrongSpatialTypes="false" xmlns:annotation="http://schemas.microsoft.com/ado/2009/02/edm/annotation" xmlns:customannotation="http://schemas.microsoft.com/ado/2013/11/edm/customannotation" xmlns="http://schemas.microsoft.com/ado/2009/11/edm">
+        <EntityType Name="Accounts">
+          <Key>
+            <PropertyRef Name="ID" />
+          </Key>
+          <Property Name="ID" Type="Int64" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Name="UserID" Type="String" MaxLength="50" FixedLength="false" Unicode="false" Nullable="false" />
+          <Property Name="PasswordHash" Type="String" MaxLength="Max" FixedLength="false" Unicode="false" Nullable="false" />
+          <Property Name="TOTPSecret" Type="String" MaxLength="50" FixedLength="false" Unicode="false" Nullable="false" />
+          <Property Name="RegistrationDateTime" Type="Int64" Nullable="false" />
+          <Property Name="RegistrationDateTimeStr" Type="String" MaxLength="50" FixedLength="false" Unicode="false" Nullable="false" />
+          <Property Name="Valid" Type="Boolean" Nullable="false" />
+          <Property Name="Suspended" Type="Boolean" Nullable="false" />
+          <Property Name="DeviceCountLimit" Type="Int32" Nullable="false" />
+          <Property Name="PaidTillDateTime" Type="Int64" Nullable="false" />
+          <Property Name="PaidTillDateTimeStr" Type="String" MaxLength="50" FixedLength="false" Unicode="false" Nullable="false" />
+          <Property Name="DefaultContactPhone" Type="String" MaxLength="50" FixedLength="false" Unicode="false" Nullable="false" />
+          <Property Name="LicenseContent" Type="String" MaxLength="Max" FixedLength="false" Unicode="false" Nullable="false" />
+        </EntityType>
+        <EntityType Name="CryptoKeys">
+          <Key>
+            <PropertyRef Name="ID" />
+          </Key>
+          <Property Name="ID" Type="Int64" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Name="PrivateKey" Type="Binary" MaxLength="Max" FixedLength="false" Nullable="false" />
+          <Property Name="PublicKey" Type="Binary" MaxLength="Max" FixedLength="false" Nullable="false" />
+        </EntityType>
+        <EntityType Name="SystemLog">
+          <Key>
+            <PropertyRef Name="ID" />
+          </Key>
+          <Property Name="ID" Type="Int64" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Name="DateTime" Type="Int64" Nullable="false" />
+          <Property Name="DateTimeStr" Type="String" MaxLength="50" FixedLength="false" Unicode="false" Nullable="false" />
+          <Property Name="IPAddress" Type="String" MaxLength="50" FixedLength="false" Unicode="false" Nullable="false" />
+          <Property Name="EventText" Type="String" MaxLength="Max" FixedLength="false" Unicode="false" Nullable="false" />
+          <Property Name="Description" Type="String" MaxLength="Max" FixedLength="false" Unicode="false" Nullable="false" />
+          <Property Name="UserID" Type="String" MaxLength="Max" FixedLength="false" Unicode="false" Nullable="false" />
+        </EntityType>
+        <EntityType Name="WebSettings">
+          <Key>
+            <PropertyRef Name="ID" />
+          </Key>
+          <Property Name="ID" Type="Int64" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Name="AdminEmail" Type="String" MaxLength="Max" FixedLength="false" Unicode="false" Nullable="false" />
+          <Property Name="SiteName" Type="String" MaxLength="Max" FixedLength="false" Unicode="false" Nullable="false" />
+          <Property Name="ServerEndPoint" Type="String" MaxLength="Max" FixedLength="false" Unicode="false" Nullable="false" />
+          <Property Name="MailFromAddress" Type="String" MaxLength="Max" FixedLength="false" Unicode="false" Nullable="false" />
+          <Property Name="EMailDisplayName" Type="String" MaxLength="Max" FixedLength="false" Unicode="false" Nullable="false" />
+          <Property Name="RegDeviceMailSubject" Type="String" MaxLength="Max" FixedLength="false" Unicode="false" Nullable="false" />
+          <Property Name="RegAccountMailSubject" Type="String" MaxLength="Max" FixedLength="false" Unicode="false" Nullable="false" />
+          <Property Name="MailUseSMTPAuth" Type="Boolean" Nullable="false" />
+          <Property Name="MailLogin" Type="String" MaxLength="Max" FixedLength="false" Unicode="false" Nullable="false" />
+          <Property Name="MailPassword" Type="String" MaxLength="Max" FixedLength="false" Unicode="false" Nullable="false" />
+          <Property Name="SMTPHost" Type="String" MaxLength="Max" FixedLength="false" Unicode="false" Nullable="false" />
+          <Property Name="SMTPPort" Type="Int32" Nullable="false" />
+          <Property Name="SMTPUseSSL" Type="Boolean" Nullable="false" />
+          <Property Name="BingMapsAPIKey" Type="String" MaxLength="Max" FixedLength="false" Unicode="false" Nullable="false" />
+          <Property Name="LastSavedDateTimeStr" Type="String" MaxLength="50" FixedLength="false" Unicode="false" Nullable="false" />
+        </EntityType>
+        <EntityContainer Name="VendingEntities" annotation:LazyLoadingEnabled="true">
+          <EntitySet Name="Accounts" EntityType="Self.Accounts" />
+          <EntitySet Name="CryptoKeys" EntityType="Self.CryptoKeys" />
+          <EntitySet Name="SystemLog" EntityType="Self.SystemLog" />
+          <EntitySet Name="WebSettings" EntityType="Self.WebSettings" />
+        </EntityContainer>
+      </Schema>
+    </edmx:ConceptualModels>
+    <!-- C-S mapping content -->
+    <edmx:Mappings>
+      <Mapping Space="C-S" xmlns="http://schemas.microsoft.com/ado/2009/11/mapping/cs">
+        <EntityContainerMapping StorageEntityContainer="Хранилище VendingModelContainer" CdmEntityContainer="VendingEntities">
+          <EntitySetMapping Name="Accounts">
+            <EntityTypeMapping TypeName="VendingModel.Accounts">
+              <MappingFragment StoreEntitySet="Accounts">
+                <ScalarProperty Name="ID" ColumnName="ID" />
+                <ScalarProperty Name="UserID" ColumnName="UserID" />
+                <ScalarProperty Name="PasswordHash" ColumnName="PasswordHash" />
+                <ScalarProperty Name="TOTPSecret" ColumnName="TOTPSecret" />
+                <ScalarProperty Name="RegistrationDateTime" ColumnName="RegistrationDateTime" />
+                <ScalarProperty Name="RegistrationDateTimeStr" ColumnName="RegistrationDateTimeStr" />
+                <ScalarProperty Name="Valid" ColumnName="Valid" />
+                <ScalarProperty Name="Suspended" ColumnName="Suspended" />
+                <ScalarProperty Name="DeviceCountLimit" ColumnName="DeviceCountLimit" />
+                <ScalarProperty Name="PaidTillDateTime" ColumnName="PaidTillDateTime" />
+                <ScalarProperty Name="PaidTillDateTimeStr" ColumnName="PaidTillDateTimeStr" />
+                <ScalarProperty Name="DefaultContactPhone" ColumnName="DefaultContactPhone" />
+                <ScalarProperty Name="LicenseContent" ColumnName="LicenseContent" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="CryptoKeys">
+            <EntityTypeMapping TypeName="VendingModel.CryptoKeys">
+              <MappingFragment StoreEntitySet="CryptoKeys">
+                <ScalarProperty Name="ID" ColumnName="ID" />
+                <ScalarProperty Name="PrivateKey" ColumnName="PrivateKey" />
+                <ScalarProperty Name="PublicKey" ColumnName="PublicKey" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="SystemLog">
+            <EntityTypeMapping TypeName="VendingModel.SystemLog">
+              <MappingFragment StoreEntitySet="SystemLog">
+                <ScalarProperty Name="ID" ColumnName="ID" />
+                <ScalarProperty Name="DateTime" ColumnName="DateTime" />
+                <ScalarProperty Name="DateTimeStr" ColumnName="DateTimeStr" />
+                <ScalarProperty Name="IPAddress" ColumnName="IPAddress" />
+                <ScalarProperty Name="EventText" ColumnName="EventText" />
+                <ScalarProperty Name="Description" ColumnName="Description" />
+                <ScalarProperty Name="UserID" ColumnName="UserID" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="WebSettings">
+            <EntityTypeMapping TypeName="VendingModel.WebSettings">
+              <MappingFragment StoreEntitySet="WebSettings">
+                <ScalarProperty Name="ID" ColumnName="ID" />
+                <ScalarProperty Name="AdminEmail" ColumnName="AdminEmail" />
+                <ScalarProperty Name="SiteName" ColumnName="SiteName" />
+                <ScalarProperty Name="ServerEndPoint" ColumnName="ServerEndPoint" />
+                <ScalarProperty Name="MailFromAddress" ColumnName="MailFromAddress" />
+                <ScalarProperty Name="EMailDisplayName" ColumnName="EMailDisplayName" />
+                <ScalarProperty Name="RegDeviceMailSubject" ColumnName="RegDeviceMailSubject" />
+                <ScalarProperty Name="RegAccountMailSubject" ColumnName="RegAccountMailSubject" />
+                <ScalarProperty Name="MailUseSMTPAuth" ColumnName="MailUseSMTPAuth" />
+                <ScalarProperty Name="MailLogin" ColumnName="MailLogin" />
+                <ScalarProperty Name="MailPassword" ColumnName="MailPassword" />
+                <ScalarProperty Name="SMTPHost" ColumnName="SMTPHost" />
+                <ScalarProperty Name="SMTPPort" ColumnName="SMTPPort" />
+                <ScalarProperty Name="SMTPUseSSL" ColumnName="SMTPUseSSL" />
+                <ScalarProperty Name="BingMapsAPIKey" ColumnName="BingMapsAPIKey" />
+                <ScalarProperty Name="LastSavedDateTimeStr" ColumnName="LastSavedDateTimeStr" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+        </EntityContainerMapping>
+      </Mapping>
+    </edmx:Mappings>
+  </edmx:Runtime>
+  <!-- EF Designer content (DO NOT EDIT MANUALLY BELOW HERE) -->
+  <Designer xmlns="http://schemas.microsoft.com/ado/2009/11/edmx">
+    <Connection>
+      <DesignerInfoPropertySet>
+        <DesignerProperty Name="MetadataArtifactProcessing" Value="EmbedInOutputAssembly" />
+      </DesignerInfoPropertySet>
+    </Connection>
+    <Options>
+      <DesignerInfoPropertySet>
+        <DesignerProperty Name="ValidateOnBuild" Value="true" />
+        <DesignerProperty Name="EnablePluralization" Value="false" />
+        <DesignerProperty Name="IncludeForeignKeysInModel" Value="true" />
+        <DesignerProperty Name="UseLegacyProvider" Value="false" />
+        <DesignerProperty Name="CodeGenerationStrategy" Value="Нет" />
+      </DesignerInfoPropertySet>
+    </Options>
+    <!-- Diagram content (shape and connector positions) -->
+    <Diagrams></Diagrams>
+  </Designer>
+</edmx:Edmx>

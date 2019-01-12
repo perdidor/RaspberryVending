@@ -1,0 +1,75 @@
+﻿<%@ Master Language="C#" AutoEventWireup="true" CodeFile="MasterPage.master.cs" Inherits="MasterPage" %>
+
+<!DOCTYPE html>
+
+<html>
+<head runat="server">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title><%: Page.Title %> - <%: WWWVars.SiteName %></title>
+    <meta name="keywords" content="" />
+    <meta name="description" content="" />
+    <link href="templatemo_style.css" rel="stylesheet" type="text/css" />
+    <script type="text/javascript">
+    function clearText(field)
+    {
+        if (field.defaultValue == field.value) field.value = '';
+        else if (field.value == '') field.value = field.defaultValue;
+    }
+    </script>
+        <asp:ContentPlaceHolder id="head" runat="server">
+        </asp:ContentPlaceHolder>
+</head>
+<body runat="server">
+    <form id="form1" runat="server">
+        <div id="templatemo_container">
+                <div id="templatemo_site_title_bar">
+                    <div id="site_title">
+                        <h1>
+                            <a href="#">C&C website<span> </span></a>
+                        </h1>
+                    </div>
+        
+                    <div id="top_menu" class="loginmenu">
+                        <p id="loginlogout" runat="server">Личный кабинет</p>
+        	            <div runat="server" id="loginlink" class="home_menu"><a href="/User/User.aspx"></a></div>
+                        <%--<div class="contact_us"><a href="mailto:contact@lagioia.ru"></a></div>--%>
+                    </div>
+    
+                </div> <!-- templatemo_site_title_bar -->
+    
+                <div id="templatemo_banner_bar">
+    	
+                    <h2>This site is private system</h2>
+                    <p>Registration required. Accounts by default not activated upon manual approval from site administration.</p>
+                    <%--<div class="button_01 fr"><a href="#">Read more</a></div>--%>
+    	
+                </div> <!-- end of templatemo_banner_bar -->
+    
+                <div id="templatemo_menu">
+    	            <ul runat="server">
+                        <%--<li><a href="/" id="HomeMenuItem" runat="server">Главная</a></li>--%>
+                        <%--<li><a href="/Support/Support.aspx" id="SupportMenuItem" runat="server">Поддержка</a></li>--%>
+                        <%--<li><a href="/User/User.aspx" id="AccountOverviewMenuItem" runat="server">Личный кабинет</a></li>--%>
+                        <%--<li><a href="/User/DeviceList.aspx" id="DeviceListMenuItem" runat="server">Мои устройства</a></li>--%>
+                        <%--<li><a href="#">Products</a></li>--%>
+                    </ul>
+                </div> <!-- end of menu -->
+                    <asp:ContentPlaceHolder id="ContentPlaceHolder1" runat="server">
+        
+                    </asp:ContentPlaceHolder>
+                <div id="templatemo_footer_bar_wrapper">
+                    <div id="templatemo_footer_bar">
+                            <h6>Copyright © 2016 - <%: DateTime.Now.Year %> <a href="mailto:ga3@yandex.ru">Ivan Ivanov</a>
+                            <br>
+                                Icons from <a href="https://www.flaticon.com/" title="Flaticon">www.flaticon.com</a> are licensed by <a href="http://creativecommons.org/licenses/by/3.0/" title="Creative Commons BY 3.0" target="_blank">CC 3.0 BY; </a>&nbsp
+                                Bing Maps © <a href="http://www.microsoft.com" title="Microsoft Corporation" target="_blank">Microsoft Corporation; </a>&nbsp
+                                <br>
+                                All rights reserved.
+		                    </h6>
+                    </div>  <!-- end of footer -->
+	            </div> <!-- end of footer_wrapper -->
+            </div> <!-- end of container -->
+    </form>
+</body>
+</html>

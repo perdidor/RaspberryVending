@@ -1,0 +1,825 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<edmx:Edmx Version="3.0" xmlns:edmx="http://schemas.microsoft.com/ado/2009/11/edmx">
+  <!-- EF Runtime content -->
+  <edmx:Runtime>
+    <!-- SSDL content -->
+    <edmx:StorageModels>
+    <Schema Namespace="VendingModel.Store" Provider="System.Data.SqlClient" ProviderManifestToken="2012" Alias="Self" xmlns:store="http://schemas.microsoft.com/ado/2007/12/edm/EntityStoreSchemaGenerator" xmlns:customannotation="http://schemas.microsoft.com/ado/2013/11/edm/customannotation" xmlns="http://schemas.microsoft.com/ado/2009/11/edm/ssdl">
+        <EntityType Name="AccountLog">
+          <Key>
+            <PropertyRef Name="ID" />
+          </Key>
+          <Property Name="ID" Type="bigint" StoreGeneratedPattern="Identity" Nullable="false" />
+          <Property Name="IPAddress" Type="varchar" MaxLength="50" Nullable="false" />
+          <Property Name="DateTime" Type="bigint" Nullable="false" />
+          <Property Name="DateTimeStr" Type="varchar" MaxLength="50" Nullable="false" />
+          <Property Name="EventText" Type="varchar(max)" Nullable="false" />
+          <Property Name="Description" Type="varchar(max)" Nullable="false" />
+          <Property Name="AccountID" Type="bigint" Nullable="false" />
+        </EntityType>
+        <EntityType Name="Accounts">
+          <Key>
+            <PropertyRef Name="ID" />
+          </Key>
+          <Property Name="ID" Type="bigint" StoreGeneratedPattern="Identity" Nullable="false" />
+          <Property Name="UserID" Type="varchar" MaxLength="50" Nullable="false" />
+          <Property Name="PasswordHash" Type="varchar(max)" Nullable="false" />
+          <Property Name="TOTPSecret" Type="varchar" MaxLength="50" Nullable="false" />
+          <Property Name="RegistrationDateTime" Type="bigint" Nullable="false" />
+          <Property Name="RegistrationDateTimeStr" Type="varchar" MaxLength="50" Nullable="false" />
+          <Property Name="Valid" Type="bit" Nullable="false" />
+          <Property Name="Suspended" Type="bit" Nullable="false" />
+          <Property Name="DeviceCountLimit" Type="int" Nullable="false" />
+          <Property Name="PaidTillDateTime" Type="bigint" Nullable="false" />
+          <Property Name="PaidTillDateTimeStr" Type="varchar" MaxLength="50" Nullable="false" />
+          <Property Name="DefaultContactPhone" Type="varchar" MaxLength="50" Nullable="false" />
+          <Property Name="LicenseContent" Type="varchar(max)" Nullable="false" />
+        </EntityType>
+        <EntityType Name="CryptoKeys">
+          <Key>
+            <PropertyRef Name="ID" />
+          </Key>
+          <Property Name="ID" Type="bigint" StoreGeneratedPattern="Identity" Nullable="false" />
+          <Property Name="PrivateKey" Type="varbinary(max)" Nullable="false" />
+          <Property Name="PublicKey" Type="varbinary(max)" Nullable="false" />
+        </EntityType>
+        <EntityType Name="SystemLog">
+          <Key>
+            <PropertyRef Name="ID" />
+          </Key>
+          <Property Name="ID" Type="bigint" StoreGeneratedPattern="Identity" Nullable="false" />
+          <Property Name="DateTime" Type="bigint" Nullable="false" />
+          <Property Name="DateTimeStr" Type="varchar" MaxLength="50" Nullable="false" />
+          <Property Name="IPAddress" Type="varchar" MaxLength="50" Nullable="false" />
+          <Property Name="EventText" Type="varchar(max)" Nullable="false" />
+          <Property Name="Description" Type="varchar(max)" Nullable="false" />
+          <Property Name="UserID" Type="varchar(max)" Nullable="false" />
+        </EntityType>
+        <EntityType Name="WaterDeviceCommands">
+          <Key>
+            <PropertyRef Name="ID" />
+          </Key>
+          <Property Name="ID" Type="bigint" StoreGeneratedPattern="Identity" Nullable="false" />
+          <Property Name="WaterDeviceID" Type="bigint" Nullable="false" />
+          <Property Name="Command" Type="varchar" MaxLength="50" Nullable="false" />
+          <Property Name="FormedDatetime" Type="bigint" Nullable="false" />
+          <Property Name="FormedDatetimeStr" Type="varchar" MaxLength="50" Nullable="false" />
+          <Property Name="RequestedDatetime" Type="bigint" Nullable="false" />
+          <Property Name="RequestedDatetimeStr" Type="varchar" MaxLength="50" Nullable="false" />
+          <Property Name="AckDatetime" Type="bigint" Nullable="false" />
+          <Property Name="AckDatetimeStr" Type="varchar" MaxLength="50" Nullable="false" />
+          <Property Name="Result" Type="varchar(max)" Nullable="false" />
+        </EntityType>
+        <EntityType Name="WaterDeviceIncasso">
+          <Key>
+            <PropertyRef Name="ID" />
+          </Key>
+          <Property Name="ID" Type="bigint" StoreGeneratedPattern="Identity" Nullable="false" />
+          <Property Name="WaterDeviceID" Type="bigint" Nullable="false" />
+          <Property Name="IncassoDatetime" Type="bigint" Nullable="false" />
+          <Property Name="IncassoDatetimeStr" Type="varchar" MaxLength="50" Nullable="false" />
+          <Property Name="IncassoCashboxCoins" Type="int" Nullable="false" />
+          <Property Name="IncassoCashboxSum" Type="decimal" Precision="7" Scale="2" Nullable="false" />
+          <Property Name="IncassoBABills" Type="int" Nullable="false" />
+          <Property Name="IncassoBASum" Type="decimal" Precision="7" Scale="2" Nullable="false" />
+          <Property Name="CommandID" Type="bigint" Nullable="false" />
+        </EntityType>
+        <EntityType Name="WaterDevices">
+          <Key>
+            <PropertyRef Name="ID" />
+          </Key>
+          <Property Name="ID" Type="bigint" StoreGeneratedPattern="Identity" Nullable="false" />
+          <Property Name="AccountID" Type="bigint" Nullable="false" />
+          <Property Name="HardwareID" Type="varchar" MaxLength="50" Nullable="false" />
+          <Property Name="RegistrationDateTime" Type="bigint" Nullable="false" />
+          <Property Name="RegistrationDateTimeStr" Type="varchar" MaxLength="50" Nullable="false" />
+          <Property Name="PublicKey" Type="varbinary(max)" Nullable="false" />
+          <Property Name="Valid" Type="bit" Nullable="false" />
+          <Property Name="Suspended" Type="bit" Nullable="false" />
+          <Property Name="PendingRegistration" Type="bit" Nullable="false" />
+          <Property Name="RegistrationRequest" Type="varchar(max)" Nullable="false" />
+          <Property Name="RegistrationRequestDateTime" Type="bigint" Nullable="false" />
+          <Property Name="RegistrationRequestDateTimeStr" Type="varchar" MaxLength="50" Nullable="false" />
+          <Property Name="LocationAddress" Type="varchar" MaxLength="50" Nullable="false" />
+          <Property Name="LocationLatitude" Type="decimal" Precision="8" Scale="6" Nullable="false" />
+          <Property Name="LocationLongtitude" Type="decimal" Precision="8" Scale="6" Nullable="false" />
+          <Property Name="ProductName" Type="varchar" MaxLength="50" Nullable="false" />
+          <Property Name="CustomerServiceContactPhone" Type="varchar" MaxLength="50" Nullable="false" />
+          <Property Name="PRICE_PER_ITEM_MDE" Type="int" Nullable="false" />
+          <Property Name="RegistrationResponse" Type="varchar(max)" Nullable="false" />
+          <Property Name="PendingRegistrationGUID" Type="varchar" MaxLength="50" Nullable="false" />
+          <Property Name="PendingRegConfirmed" Type="bit" Nullable="false" />
+          <Property Name="PendingRegConfirmationIP" Type="varchar" MaxLength="50" Nullable="false" />
+          <Property Name="PendingRegConfirmationDateTime" Type="bigint" Nullable="false" />
+          <Property Name="PendingRegConfirmationDateTimeStr" Type="varchar" MaxLength="50" Nullable="false" />
+          <Property Name="TaxSystemType" Type="int" Nullable="false" />
+          <Property Name="SettingsVersion" Type="bigint" Nullable="false" />
+          <Property Name="WaterTankHeigthcm" Type="int" Nullable="false" />
+        </EntityType>
+        <EntityType Name="WaterDeviceState">
+          <Key>
+            <PropertyRef Name="ID" />
+          </Key>
+          <Property Name="ID" Type="bigint" StoreGeneratedPattern="Identity" Nullable="false" />
+          <Property Name="DateTime" Type="bigint" Nullable="false" />
+          <Property Name="DateTimeStr" Type="varchar" MaxLength="50" Nullable="false" />
+          <Property Name="WaterDeviceID" Type="bigint" Nullable="false" />
+          <Property Name="CC10RURCount" Type="int" Nullable="false" />
+          <Property Name="CC5RURCount" Type="int" Nullable="false" />
+          <Property Name="CC2RURCount" Type="int" Nullable="false" />
+          <Property Name="CC1RURCount" Type="int" Nullable="false" />
+          <Property Name="CCSum" Type="decimal" Precision="7" Scale="2" Nullable="false" />
+          <Property Name="CBCount" Type="int" Nullable="false" />
+          <Property Name="CBSum" Type="decimal" Precision="7" Scale="2" Nullable="false" />
+          <Property Name="IncassoSum" Type="decimal" Precision="7" Scale="2" Nullable="false" />
+          <Property Name="WaterTempCelsius" Type="decimal" Precision="4" Scale="2" Nullable="false" />
+          <Property Name="InboxTempCelsius" Type="decimal" Precision="4" Scale="2" Nullable="false" />
+          <Property Name="AmbientTempCelsius" Type="decimal" Precision="4" Scale="2" Nullable="false" />
+          <Property Name="AmbientRelativeHumidity" Type="decimal" Precision="4" Scale="2" Nullable="false" />
+          <Property Name="WaterLevelPercent" Type="int" Nullable="false" />
+          <Property Name="IsHeaterOn" Type="bit" Nullable="false" />
+          <Property Name="IsExternalLightOn" Type="bit" Nullable="false" />
+          <Property Name="IsFillPumpSocketActive" Type="bit" Nullable="false" />
+          <Property Name="TotalLitersDIspensed" Type="decimal" Precision="10" Scale="2" Nullable="false" />
+          <Property Name="TotalHoursWorked" Type="decimal" Precision="10" Scale="2" Nullable="false" />
+          <Property Name="KKTMfgNumber" Type="varchar" MaxLength="50" Nullable="false" />
+          <Property Name="KKTStageOpened" Type="bit" Nullable="false" />
+          <Property Name="KKTStageOver24h" Type="bit" Nullable="false" />
+          <Property Name="KKTStageNumber" Type="varchar" MaxLength="50" Nullable="false" />
+          <Property Name="KKTReceiptOpened" Type="bit" Nullable="false" />
+          <Property Name="KKTCurrentMode" Type="int" Nullable="false" />
+          <Property Name="KKTPrinterConnected" Type="bit" Nullable="false" />
+          <Property Name="KKTPrinterPaperEmpty" Type="bit" Nullable="false" />
+          <Property Name="KKTPrinterNonRecoverableError" Type="bit" Nullable="false" />
+          <Property Name="KKTPrinterCutterError" Type="bit" Nullable="false" />
+          <Property Name="KKTPrinterOverHeated" Type="bit" Nullable="false" />
+          <Property Name="KKTPrinterPaperJammed" Type="bit" Nullable="false" />
+          <Property Name="KKTPrinterPaperEnding" Type="bit" Nullable="false" />
+          <Property Name="BABillsCount" Type="int" Nullable="false" />
+          <Property Name="BASum" Type="decimal" Precision="7" Scale="2" Nullable="false" />
+          <Property Name="LastStageClosedDateTime" Type="bigint" Nullable="false" />
+          <Property Name="LastStageClosedDateTimeStr" Type="varchar" MaxLength="50" Nullable="false" />
+          <Property Name="KKTReceiptNextNumber" Type="int" Nullable="false" />
+          <Property Name="VMCMode" Type="varchar" MaxLength="50" Nullable="false" />
+          <Property Name="MDBInitStep" Type="int" Nullable="false" />
+          <Property Name="ProgramVersion" Type="varchar" MaxLength="50" Nullable="false" />
+        </EntityType>
+        <EntityType Name="WaterDeviceTelemetry">
+          <Key>
+            <PropertyRef Name="ID" />
+          </Key>
+          <Property Name="ID" Type="bigint" StoreGeneratedPattern="Identity" Nullable="false" />
+          <Property Name="DateTime" Type="bigint" Nullable="false" />
+          <Property Name="DateTimeStr" Type="varchar" MaxLength="50" Nullable="false" />
+          <Property Name="WaterDeviceID" Type="bigint" Nullable="false" />
+          <Property Name="CC10RURCount" Type="int" Nullable="false" />
+          <Property Name="CC5RURCount" Type="int" Nullable="false" />
+          <Property Name="CC2RURCount" Type="int" Nullable="false" />
+          <Property Name="CC1RURCount" Type="int" Nullable="false" />
+          <Property Name="CCSum" Type="decimal" Precision="7" Scale="2" Nullable="false" />
+          <Property Name="CBCount" Type="int" Nullable="false" />
+          <Property Name="CBSum" Type="decimal" Precision="7" Scale="2" Nullable="false" />
+          <Property Name="IncassoSum" Type="decimal" Precision="7" Scale="2" Nullable="false" />
+          <Property Name="WaterTempCelsius" Type="decimal" Precision="4" Scale="2" Nullable="false" />
+          <Property Name="InboxTempCelsius" Type="decimal" Precision="4" Scale="2" Nullable="false" />
+          <Property Name="AmbientTempCelsius" Type="decimal" Precision="4" Scale="2" Nullable="false" />
+          <Property Name="AmbientRelativeHumidity" Type="decimal" Precision="4" Scale="2" Nullable="false" />
+          <Property Name="WaterLevelPercent" Type="int" Nullable="false" />
+          <Property Name="IsHeaterOn" Type="bit" Nullable="false" />
+          <Property Name="IsExternalLightOn" Type="bit" Nullable="false" />
+          <Property Name="IsFillPumpSocketActive" Type="bit" Nullable="false" />
+          <Property Name="TotalLitersDIspensed" Type="decimal" Precision="10" Scale="2" Nullable="false" />
+          <Property Name="TotalHoursWorked" Type="decimal" Precision="10" Scale="2" Nullable="false" />
+          <Property Name="KKTMfgNumber" Type="varchar" MaxLength="50" Nullable="false" />
+          <Property Name="KKTStageOpened" Type="bit" Nullable="false" />
+          <Property Name="KKTStageOver24h" Type="bit" Nullable="false" />
+          <Property Name="KKTStageNumber" Type="varchar" MaxLength="50" Nullable="false" />
+          <Property Name="KKTReceiptOpened" Type="bit" Nullable="false" />
+          <Property Name="KKTCurrentMode" Type="int" Nullable="false" />
+          <Property Name="KKTPrinterConnected" Type="bit" Nullable="false" />
+          <Property Name="KKTPrinterPaperEmpty" Type="bit" Nullable="false" />
+          <Property Name="KKTPrinterNonRecoverableError" Type="bit" Nullable="false" />
+          <Property Name="KKTPrinterCutterError" Type="bit" Nullable="false" />
+          <Property Name="KKTPrinterOverHeated" Type="bit" Nullable="false" />
+          <Property Name="KKTPrinterPaperJammed" Type="bit" Nullable="false" />
+          <Property Name="KKTPrinterPaperEnding" Type="bit" Nullable="false" />
+          <Property Name="BABillsCount" Type="int" Nullable="false" />
+          <Property Name="BASum" Type="decimal" Precision="7" Scale="2" Nullable="false" />
+          <Property Name="LastStageClosedDateTime" Type="bigint" Nullable="false" />
+          <Property Name="LastStageClosedDateTimeStr" Type="varchar" MaxLength="50" Nullable="false" />
+          <Property Name="KKTReceiptNextNumber" Type="int" Nullable="false" />
+          <Property Name="VMCMode" Type="varchar" MaxLength="50" Nullable="false" />
+          <Property Name="MDBInitStep" Type="int" Nullable="false" />
+          <Property Name="ProgramVersion" Type="varchar" MaxLength="50" Nullable="false" />
+        </EntityType>
+        <EntityType Name="WaterSales">
+          <Key>
+            <PropertyRef Name="ID" />
+          </Key>
+          <Property Name="ID" Type="bigint" StoreGeneratedPattern="Identity" Nullable="false" />
+          <Property Name="WaterDeviceID" Type="bigint" Nullable="false" />
+          <Property Name="StartDateTime" Type="bigint" Nullable="false" />
+          <Property Name="StartDateTimeStr" Type="varchar" MaxLength="50" Nullable="false" />
+          <Property Name="UserCash" Type="decimal" Precision="7" Scale="2" Nullable="false" />
+          <Property Name="Quantity" Type="decimal" Precision="7" Scale="2" Nullable="false" />
+          <Property Name="TaxSystemInUse" Type="int" Nullable="false" />
+          <Property Name="PRICE_PER_ITEM_MDE" Type="int" Nullable="false" />
+          <Property Name="ProductName" Type="varchar" MaxLength="50" Nullable="false" />
+          <Property Name="ActualChangeDispensed" Type="int" Nullable="false" />
+          <Property Name="ChangeActualDiff" Type="decimal" Precision="7" Scale="2" Nullable="false" />
+          <Property Name="EndDateTime" Type="bigint" Nullable="false" />
+          <Property Name="EndDateTimeString" Type="varchar" MaxLength="50" Nullable="false" />
+          <Property Name="StageNumber" Type="bigint" Nullable="false" />
+          <Property Name="ReceiptNumber" Type="bigint" Nullable="false" />
+        </EntityType>
+        <EntityType Name="WebSettings">
+          <Key>
+            <PropertyRef Name="ID" />
+          </Key>
+          <Property Name="ID" Type="bigint" StoreGeneratedPattern="Identity" Nullable="false" />
+          <Property Name="AdminEmail" Type="varchar(max)" Nullable="false" />
+          <Property Name="SiteName" Type="varchar(max)" Nullable="false" />
+          <Property Name="ServerEndPoint" Type="varchar(max)" Nullable="false" />
+          <Property Name="MailFromAddress" Type="varchar(max)" Nullable="false" />
+          <Property Name="EMailDisplayName" Type="varchar(max)" Nullable="false" />
+          <Property Name="RegDeviceMailSubject" Type="varchar(max)" Nullable="false" />
+          <Property Name="RegAccountMailSubject" Type="varchar(max)" Nullable="false" />
+          <Property Name="MailUseSMTPAuth" Type="bit" Nullable="false" />
+          <Property Name="MailLogin" Type="varchar(max)" Nullable="false" />
+          <Property Name="MailPassword" Type="varchar(max)" Nullable="false" />
+          <Property Name="SMTPHost" Type="varchar(max)" Nullable="false" />
+          <Property Name="SMTPPort" Type="int" Nullable="false" />
+          <Property Name="SMTPUseSSL" Type="bit" Nullable="false" />
+          <Property Name="BingMapsAPIKey" Type="varchar(max)" Nullable="false" />
+          <Property Name="LastSavedDateTimeStr" Type="varchar" MaxLength="50" Nullable="false" />
+        </EntityType>
+        <EntityContainer Name="VendingModelStoreContainer">
+          <EntitySet Name="AccountLog" EntityType="Self.AccountLog" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="Accounts" EntityType="Self.Accounts" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="CryptoKeys" EntityType="Self.CryptoKeys" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="SystemLog" EntityType="Self.SystemLog" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="WaterDeviceCommands" EntityType="Self.WaterDeviceCommands" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="WaterDeviceIncasso" EntityType="Self.WaterDeviceIncasso" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="WaterDevices" EntityType="Self.WaterDevices" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="WaterDeviceState" EntityType="Self.WaterDeviceState" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="WaterDeviceTelemetry" EntityType="Self.WaterDeviceTelemetry" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="WaterSales" EntityType="Self.WaterSales" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="WebSettings" EntityType="Self.WebSettings" Schema="dbo" store:Type="Tables" />
+        </EntityContainer>
+      </Schema></edmx:StorageModels>
+    <!-- CSDL content -->
+    <edmx:ConceptualModels>
+      <Schema xmlns="http://schemas.microsoft.com/ado/2009/11/edm" xmlns:cg="http://schemas.microsoft.com/ado/2006/04/codegeneration" xmlns:store="http://schemas.microsoft.com/ado/2007/12/edm/EntityStoreSchemaGenerator" Namespace="VendingModel" Alias="Self" xmlns:annotation="http://schemas.microsoft.com/ado/2009/02/edm/annotation" annotation:UseStrongSpatialTypes="false">
+        <EntityContainer Name="VendingModelContainer" annotation:LazyLoadingEnabled="true">
+          <EntitySet Name="Accounts" EntityType="VendingModel.Accounts" />
+          <EntitySet Name="WaterSales" EntityType="VendingModel.WaterSales" />
+          <EntitySet Name="WaterDeviceCommands" EntityType="VendingModel.WaterDeviceCommands" />
+          <EntitySet Name="WaterDeviceIncasso" EntityType="VendingModel.WaterDeviceIncasso" />
+          <EntitySet Name="WaterDevices" EntityType="VendingModel.WaterDevices" />
+          <EntitySet Name="WaterDeviceTelemetry" EntityType="VendingModel.WaterDeviceTelemetry" />
+          <EntitySet Name="CryptoKeys" EntityType="VendingModel.CryptoKeys" />
+          <EntitySet Name="WebSettings" EntityType="VendingModel.WebSettings" />
+          <EntitySet Name="AccountLog" EntityType="VendingModel.AccountLog" />
+          <EntitySet Name="SystemLog" EntityType="VendingModel.SystemLog" />
+          <EntitySet Name="WaterDeviceState" EntityType="VendingModel.WaterDeviceState" />
+        </EntityContainer>
+        <EntityType Name="Accounts">
+          <Key>
+            <PropertyRef Name="ID" />
+          </Key>
+          <Property Name="ID" Type="Int64" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Name="UserID" Type="String" Nullable="false" MaxLength="50" FixedLength="false" Unicode="false" />
+          <Property Name="PasswordHash" Type="String" Nullable="false" MaxLength="Max" FixedLength="false" Unicode="false" />
+          <Property Name="TOTPSecret" Type="String" Nullable="false" MaxLength="50" FixedLength="false" Unicode="false" />
+          <Property Name="RegistrationDateTime" Type="Int64" Nullable="false" />
+          <Property Name="RegistrationDateTimeStr" Type="String" Nullable="false" MaxLength="50" FixedLength="false" Unicode="false" />
+          <Property Name="Valid" Type="Boolean" Nullable="false" />
+          <Property Name="Suspended" Type="Boolean" Nullable="false" />
+          <Property Name="DeviceCountLimit" Type="Int32" Nullable="false" />
+          <Property Name="PaidTillDateTime" Type="Int64" Nullable="false" />
+          <Property Name="PaidTillDateTimeStr" Type="String" Nullable="false" MaxLength="50" FixedLength="false" Unicode="false" />
+          <Property Name="DefaultContactPhone" Type="String" Nullable="false" MaxLength="50" FixedLength="false" Unicode="false" />
+          <Property Name="LicenseContent" Type="String" Nullable="false" MaxLength="Max" FixedLength="false" Unicode="false" />
+        </EntityType>
+        <EntityType Name="WaterSales">
+          <Key>
+            <PropertyRef Name="ID" />
+          </Key>
+          <Property Name="ID" Type="Int64" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Name="WaterDeviceID" Type="Int64" Nullable="false" />
+          <Property Name="StartDateTime" Type="Int64" Nullable="false" />
+          <Property Name="StartDateTimeStr" Type="String" Nullable="false" MaxLength="50" FixedLength="false" Unicode="false" />
+          <Property Name="UserCash" Type="Decimal" Nullable="false" Precision="7" Scale="2" />
+          <Property Name="Quantity" Type="Decimal" Nullable="false" Precision="7" Scale="2" />
+          <Property Name="TaxSystemInUse" Type="Int32" Nullable="false" />
+          <Property Name="PRICE_PER_ITEM_MDE" Type="Int32" Nullable="false" />
+          <Property Name="ProductName" Type="String" Nullable="false" MaxLength="50" FixedLength="false" Unicode="false" />
+          <Property Name="ActualChangeDispensed" Type="Int32" Nullable="false" />
+          <Property Name="ChangeActualDiff" Type="Decimal" Nullable="false" Precision="7" Scale="2" />
+          <Property Name="EndDateTime" Type="Int64" Nullable="false" />
+          <Property Name="EndDateTimeString" Type="String" Nullable="false" MaxLength="50" FixedLength="false" Unicode="false" />
+          <Property Name="StageNumber" Type="Int64" Nullable="false" />
+          <Property Name="ReceiptNumber" Type="Int64" Nullable="false" />
+        </EntityType>
+        <EntityType Name="WaterDeviceCommands">
+          <Key>
+            <PropertyRef Name="ID" />
+          </Key>
+          <Property Name="ID" Type="Int64" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Name="WaterDeviceID" Type="Int64" Nullable="false" />
+          <Property Name="Command" Type="String" Nullable="false" MaxLength="50" FixedLength="false" Unicode="false" />
+          <Property Name="FormedDatetime" Type="Int64" Nullable="false" />
+          <Property Name="FormedDatetimeStr" Type="String" Nullable="false" MaxLength="50" FixedLength="false" Unicode="false" />
+          <Property Name="RequestedDatetime" Type="Int64" Nullable="false" />
+          <Property Name="RequestedDatetimeStr" Type="String" Nullable="false" MaxLength="50" FixedLength="false" Unicode="false" />
+          <Property Name="AckDatetime" Type="Int64" Nullable="false" />
+          <Property Name="AckDatetimeStr" Type="String" Nullable="false" MaxLength="50" FixedLength="false" Unicode="false" />
+          <Property Name="Result" Type="String" Nullable="false" MaxLength="Max" FixedLength="false" Unicode="false" />
+        </EntityType>
+        <EntityType Name="WaterDeviceIncasso">
+          <Key>
+            <PropertyRef Name="ID" />
+          </Key>
+          <Property Name="ID" Type="Int64" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Name="WaterDeviceID" Type="Int64" Nullable="false" />
+          <Property Name="IncassoDatetime" Type="Int64" Nullable="false" />
+          <Property Name="IncassoDatetimeStr" Type="String" Nullable="false" MaxLength="50" FixedLength="false" Unicode="false" />
+          <Property Name="IncassoCashboxCoins" Type="Int32" Nullable="false" />
+          <Property Name="IncassoCashboxSum" Type="Decimal" Nullable="false" Precision="7" Scale="2" />
+          <Property Name="IncassoBABills" Type="Int32" Nullable="false" />
+          <Property Name="IncassoBASum" Type="Decimal" Nullable="false" Precision="7" Scale="2" />
+          <Property Name="CommandID" Type="Int64" Nullable="false" />
+        </EntityType>
+        <EntityType Name="WaterDevices">
+          <Key>
+            <PropertyRef Name="ID" />
+          </Key>
+          <Property Name="ID" Type="Int64" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Name="AccountID" Type="Int64" Nullable="false" />
+          <Property Name="HardwareID" Type="String" Nullable="false" MaxLength="50" FixedLength="false" Unicode="false" />
+          <Property Name="RegistrationDateTime" Type="Int64" Nullable="false" />
+          <Property Name="RegistrationDateTimeStr" Type="String" Nullable="false" MaxLength="50" FixedLength="false" Unicode="false" />
+          <Property Name="PublicKey" Type="Binary" Nullable="false" MaxLength="Max" FixedLength="false" />
+          <Property Name="Valid" Type="Boolean" Nullable="false" />
+          <Property Name="Suspended" Type="Boolean" Nullable="false" />
+          <Property Name="PendingRegistration" Type="Boolean" Nullable="false" />
+          <Property Name="RegistrationRequest" Type="String" Nullable="false" MaxLength="Max" FixedLength="false" Unicode="false" />
+          <Property Name="RegistrationRequestDateTime" Type="Int64" Nullable="false" />
+          <Property Name="RegistrationRequestDateTimeStr" Type="String" Nullable="false" MaxLength="50" FixedLength="false" Unicode="false" />
+          <Property Name="LocationAddress" Type="String" Nullable="false" MaxLength="50" FixedLength="false" Unicode="false" />
+          <Property Name="LocationLatitude" Type="Decimal" Nullable="false" Precision="8" Scale="6" />
+          <Property Name="LocationLongtitude" Type="Decimal" Nullable="false" Precision="8" Scale="6" />
+          <Property Name="ProductName" Type="String" Nullable="false" MaxLength="50" FixedLength="false" Unicode="false" />
+          <Property Name="CustomerServiceContactPhone" Type="String" Nullable="false" MaxLength="50" FixedLength="false" Unicode="false" />
+          <Property Name="PRICE_PER_ITEM_MDE" Type="Int32" Nullable="false" />
+          <Property Name="RegistrationResponse" Type="String" Nullable="false" MaxLength="Max" FixedLength="false" Unicode="false" />
+          <Property Name="PendingRegistrationGUID" Type="String" Nullable="false" MaxLength="50" FixedLength="false" Unicode="false" />
+          <Property Name="PendingRegConfirmed" Type="Boolean" Nullable="false" />
+          <Property Name="PendingRegConfirmationIP" Type="String" Nullable="false" MaxLength="50" FixedLength="false" Unicode="false" />
+          <Property Name="PendingRegConfirmationDateTime" Type="Int64" Nullable="false" />
+          <Property Name="PendingRegConfirmationDateTimeStr" Type="String" Nullable="false" MaxLength="50" FixedLength="false" Unicode="false" />
+          <Property Name="TaxSystemType" Type="Int32" Nullable="false" />
+          <Property Name="SettingsVersion" Type="Int64" Nullable="false" />
+          <Property Name="WaterTankHeigthcm" Type="Int32" Nullable="false" />
+        </EntityType>
+        <EntityType Name="WaterDeviceTelemetry">
+          <Key>
+            <PropertyRef Name="ID" />
+          </Key>
+          <Property Name="ID" Type="Int64" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Name="DateTime" Type="Int64" Nullable="false" />
+          <Property Name="DateTimeStr" Type="String" Nullable="false" MaxLength="50" FixedLength="false" Unicode="false" />
+          <Property Name="WaterDeviceID" Type="Int64" Nullable="false" />
+          <Property Name="CC10RURCount" Type="Int32" Nullable="false" />
+          <Property Name="CC5RURCount" Type="Int32" Nullable="false" />
+          <Property Name="CC2RURCount" Type="Int32" Nullable="false" />
+          <Property Name="CC1RURCount" Type="Int32" Nullable="false" />
+          <Property Name="CCSum" Type="Decimal" Nullable="false" Precision="7" Scale="2" />
+          <Property Name="CBCount" Type="Int32" Nullable="false" />
+          <Property Name="CBSum" Type="Decimal" Nullable="false" Precision="7" Scale="2" />
+          <Property Name="IncassoSum" Type="Decimal" Nullable="false" Precision="7" Scale="2" />
+          <Property Name="WaterTempCelsius" Type="Decimal" Nullable="false" Precision="4" Scale="2" />
+          <Property Name="InboxTempCelsius" Type="Decimal" Nullable="false" Precision="4" Scale="2" />
+          <Property Name="AmbientTempCelsius" Type="Decimal" Nullable="false" Precision="4" Scale="2" />
+          <Property Name="AmbientRelativeHumidity" Type="Decimal" Nullable="false" Precision="4" Scale="2" />
+          <Property Name="WaterLevelPercent" Type="Int32" Nullable="false" />
+          <Property Name="IsHeaterOn" Type="Boolean" Nullable="false" />
+          <Property Name="IsExternalLightOn" Type="Boolean" Nullable="false" />
+          <Property Name="IsFillPumpSocketActive" Type="Boolean" Nullable="false" />
+          <Property Name="TotalLitersDIspensed" Type="Decimal" Nullable="false" Precision="10" Scale="2" />
+          <Property Name="TotalHoursWorked" Type="Decimal" Nullable="false" Precision="10" Scale="2" />
+          <Property Name="KKTMfgNumber" Type="String" Nullable="false" MaxLength="50" FixedLength="false" Unicode="false" />
+          <Property Name="KKTStageOpened" Type="Boolean" Nullable="false" />
+          <Property Name="KKTStageOver24h" Type="Boolean" Nullable="false" />
+          <Property Name="KKTStageNumber" Type="String" Nullable="false" MaxLength="50" FixedLength="false" Unicode="false" />
+          <Property Name="KKTReceiptOpened" Type="Boolean" Nullable="false" />
+          <Property Name="KKTCurrentMode" Type="Int32" Nullable="false" />
+          <Property Name="KKTPrinterConnected" Type="Boolean" Nullable="false" />
+          <Property Name="KKTPrinterPaperEmpty" Type="Boolean" Nullable="false" />
+          <Property Name="KKTPrinterNonRecoverableError" Type="Boolean" Nullable="false" />
+          <Property Name="KKTPrinterCutterError" Type="Boolean" Nullable="false" />
+          <Property Name="KKTPrinterOverHeated" Type="Boolean" Nullable="false" />
+          <Property Name="KKTPrinterPaperJammed" Type="Boolean" Nullable="false" />
+          <Property Name="KKTPrinterPaperEnding" Type="Boolean" Nullable="false" />
+          <Property Name="BABillsCount" Type="Int32" Nullable="false" />
+          <Property Name="BASum" Type="Decimal" Nullable="false" Precision="7" Scale="2" />
+          <Property Name="LastStageClosedDateTime" Type="Int64" Nullable="false" />
+          <Property Name="LastStageClosedDateTimeStr" Type="String" Nullable="false" MaxLength="50" FixedLength="false" Unicode="false" />
+          <Property Name="KKTReceiptNextNumber" Type="Int32" Nullable="false" />
+          <Property Name="VMCMode" Type="String" Nullable="false" MaxLength="50" FixedLength="false" Unicode="false" />
+          <Property Name="MDBInitStep" Type="Int32" Nullable="false" />
+          <Property Name="ProgramVersion" Type="String" Nullable="false" MaxLength="50" FixedLength="false" Unicode="false" />
+        </EntityType>
+        <EntityType Name="CryptoKeys">
+          <Key>
+            <PropertyRef Name="ID" />
+          </Key>
+          <Property Name="ID" Type="Int64" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Name="PrivateKey" Type="Binary" Nullable="false" MaxLength="Max" FixedLength="false" />
+          <Property Name="PublicKey" Type="Binary" Nullable="false" MaxLength="Max" FixedLength="false" />
+        </EntityType>
+        <EntityType Name="WebSettings">
+          <Key>
+            <PropertyRef Name="ID" />
+          </Key>
+          <Property Name="ID" Type="Int64" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Name="AdminEmail" Type="String" Nullable="false" MaxLength="Max" FixedLength="false" Unicode="false" />
+          <Property Name="SiteName" Type="String" Nullable="false" MaxLength="Max" FixedLength="false" Unicode="false" />
+          <Property Name="ServerEndPoint" Type="String" Nullable="false" MaxLength="Max" FixedLength="false" Unicode="false" />
+          <Property Name="MailFromAddress" Type="String" Nullable="false" MaxLength="Max" FixedLength="false" Unicode="false" />
+          <Property Name="EMailDisplayName" Type="String" Nullable="false" MaxLength="Max" FixedLength="false" Unicode="false" />
+          <Property Name="RegDeviceMailSubject" Type="String" Nullable="false" MaxLength="Max" FixedLength="false" Unicode="false" />
+          <Property Name="RegAccountMailSubject" Type="String" Nullable="false" MaxLength="Max" FixedLength="false" Unicode="false" />
+          <Property Name="MailUseSMTPAuth" Type="Boolean" Nullable="false" />
+          <Property Name="MailLogin" Type="String" Nullable="false" MaxLength="Max" FixedLength="false" Unicode="false" />
+          <Property Name="MailPassword" Type="String" Nullable="false" MaxLength="Max" FixedLength="false" Unicode="false" />
+          <Property Name="SMTPHost" Type="String" Nullable="false" MaxLength="Max" FixedLength="false" Unicode="false" />
+          <Property Name="SMTPPort" Type="Int32" Nullable="false" />
+          <Property Name="SMTPUseSSL" Type="Boolean" Nullable="false" />
+          <Property Name="BingMapsAPIKey" Type="String" Nullable="false" MaxLength="Max" FixedLength="false" Unicode="false" />
+          <Property Name="LastSavedDateTimeStr" Type="String" Nullable="false" MaxLength="50" FixedLength="false" Unicode="false" />
+        </EntityType>
+        <EntityType Name="AccountLog">
+          <Key>
+            <PropertyRef Name="ID" />
+          </Key>
+          <Property Name="ID" Type="Int64" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Name="IPAddress" Type="String" Nullable="false" MaxLength="50" FixedLength="false" Unicode="false" />
+          <Property Name="DateTime" Type="Int64" Nullable="false" />
+          <Property Name="DateTimeStr" Type="String" Nullable="false" MaxLength="50" FixedLength="false" Unicode="false" />
+          <Property Name="EventText" Type="String" Nullable="false" MaxLength="Max" FixedLength="false" Unicode="false" />
+          <Property Name="Description" Type="String" Nullable="false" MaxLength="Max" FixedLength="false" Unicode="false" />
+          <Property Name="AccountID" Type="Int64" Nullable="false" />
+        </EntityType>
+        <EntityType Name="SystemLog">
+          <Key>
+            <PropertyRef Name="ID" />
+          </Key>
+          <Property Name="ID" Type="Int64" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Name="DateTime" Type="Int64" Nullable="false" />
+          <Property Name="DateTimeStr" Type="String" Nullable="false" MaxLength="50" FixedLength="false" Unicode="false" />
+          <Property Name="IPAddress" Type="String" Nullable="false" MaxLength="50" FixedLength="false" Unicode="false" />
+          <Property Name="EventText" Type="String" Nullable="false" MaxLength="Max" FixedLength="false" Unicode="false" />
+          <Property Name="Description" Type="String" Nullable="false" MaxLength="Max" FixedLength="false" Unicode="false" />
+          <Property Name="UserID" Type="String" Nullable="false" MaxLength="Max" FixedLength="false" Unicode="false" />
+        </EntityType>
+        <EntityType Name="WaterDeviceState">
+          <Key>
+            <PropertyRef Name="ID" />
+          </Key>
+          <Property Name="ID" Type="Int64" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Name="DateTime" Type="Int64" Nullable="false" />
+          <Property Name="DateTimeStr" Type="String" Nullable="false" MaxLength="50" FixedLength="false" Unicode="false" />
+          <Property Name="WaterDeviceID" Type="Int64" Nullable="false" />
+          <Property Name="CC10RURCount" Type="Int32" Nullable="false" />
+          <Property Name="CC5RURCount" Type="Int32" Nullable="false" />
+          <Property Name="CC2RURCount" Type="Int32" Nullable="false" />
+          <Property Name="CC1RURCount" Type="Int32" Nullable="false" />
+          <Property Name="CCSum" Type="Decimal" Nullable="false" Precision="7" Scale="2" />
+          <Property Name="CBCount" Type="Int32" Nullable="false" />
+          <Property Name="CBSum" Type="Decimal" Nullable="false" Precision="7" Scale="2" />
+          <Property Name="IncassoSum" Type="Decimal" Nullable="false" Precision="7" Scale="2" />
+          <Property Name="WaterTempCelsius" Type="Decimal" Nullable="false" Precision="4" Scale="2" />
+          <Property Name="InboxTempCelsius" Type="Decimal" Nullable="false" Precision="4" Scale="2" />
+          <Property Name="AmbientTempCelsius" Type="Decimal" Nullable="false" Precision="4" Scale="2" />
+          <Property Name="AmbientRelativeHumidity" Type="Decimal" Nullable="false" Precision="4" Scale="2" />
+          <Property Name="WaterLevelPercent" Type="Int32" Nullable="false" />
+          <Property Name="IsHeaterOn" Type="Boolean" Nullable="false" />
+          <Property Name="IsExternalLightOn" Type="Boolean" Nullable="false" />
+          <Property Name="IsFillPumpSocketActive" Type="Boolean" Nullable="false" />
+          <Property Name="TotalLitersDIspensed" Type="Decimal" Nullable="false" Precision="10" Scale="2" />
+          <Property Name="TotalHoursWorked" Type="Decimal" Nullable="false" Precision="10" Scale="2" />
+          <Property Name="KKTMfgNumber" Type="String" Nullable="false" MaxLength="50" FixedLength="false" Unicode="false" />
+          <Property Name="KKTStageOpened" Type="Boolean" Nullable="false" />
+          <Property Name="KKTStageOver24h" Type="Boolean" Nullable="false" />
+          <Property Name="KKTStageNumber" Type="String" Nullable="false" MaxLength="50" FixedLength="false" Unicode="false" />
+          <Property Name="KKTReceiptOpened" Type="Boolean" Nullable="false" />
+          <Property Name="KKTCurrentMode" Type="Int32" Nullable="false" />
+          <Property Name="KKTPrinterConnected" Type="Boolean" Nullable="false" />
+          <Property Name="KKTPrinterPaperEmpty" Type="Boolean" Nullable="false" />
+          <Property Name="KKTPrinterNonRecoverableError" Type="Boolean" Nullable="false" />
+          <Property Name="KKTPrinterCutterError" Type="Boolean" Nullable="false" />
+          <Property Name="KKTPrinterOverHeated" Type="Boolean" Nullable="false" />
+          <Property Name="KKTPrinterPaperJammed" Type="Boolean" Nullable="false" />
+          <Property Name="KKTPrinterPaperEnding" Type="Boolean" Nullable="false" />
+          <Property Name="BABillsCount" Type="Int32" Nullable="false" />
+          <Property Name="BASum" Type="Decimal" Nullable="false" Precision="7" Scale="2" />
+          <Property Name="LastStageClosedDateTime" Type="Int64" Nullable="false" />
+          <Property Name="LastStageClosedDateTimeStr" Type="String" Nullable="false" MaxLength="50" FixedLength="false" Unicode="false" />
+          <Property Name="KKTReceiptNextNumber" Type="Int32" Nullable="false" />
+          <Property Name="VMCMode" Type="String" Nullable="false" MaxLength="50" FixedLength="false" Unicode="false" />
+          <Property Name="MDBInitStep" Type="Int32" Nullable="false" />
+          <Property Name="ProgramVersion" Type="String" Nullable="false" MaxLength="50" FixedLength="false" Unicode="false" />
+        </EntityType>
+      </Schema>
+    </edmx:ConceptualModels>
+    <!-- C-S mapping content -->
+    <edmx:Mappings>
+      <Mapping xmlns="http://schemas.microsoft.com/ado/2009/11/mapping/cs" Space="C-S">
+        <Alias Key="Model" Value="VendingModel" />
+        <Alias Key="Target" Value="VendingModel.Store" />
+        <EntityContainerMapping CdmEntityContainer="VendingModelContainer" StorageEntityContainer="VendingModelStoreContainer">
+          <EntitySetMapping Name="Accounts">
+            <EntityTypeMapping TypeName="VendingModel.Accounts">
+              <MappingFragment StoreEntitySet="Accounts">
+                <ScalarProperty Name="LicenseContent" ColumnName="LicenseContent" />
+                <ScalarProperty Name="DefaultContactPhone" ColumnName="DefaultContactPhone" />
+                <ScalarProperty Name="PaidTillDateTimeStr" ColumnName="PaidTillDateTimeStr" />
+                <ScalarProperty Name="PaidTillDateTime" ColumnName="PaidTillDateTime" />
+                <ScalarProperty Name="DeviceCountLimit" ColumnName="DeviceCountLimit" />
+                <ScalarProperty Name="Suspended" ColumnName="Suspended" />
+                <ScalarProperty Name="Valid" ColumnName="Valid" />
+                <ScalarProperty Name="RegistrationDateTimeStr" ColumnName="RegistrationDateTimeStr" />
+                <ScalarProperty Name="RegistrationDateTime" ColumnName="RegistrationDateTime" />
+                <ScalarProperty Name="TOTPSecret" ColumnName="TOTPSecret" />
+                <ScalarProperty Name="PasswordHash" ColumnName="PasswordHash" />
+                <ScalarProperty Name="UserID" ColumnName="UserID" />
+                <ScalarProperty Name="ID" ColumnName="ID" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="WaterSales">
+            <EntityTypeMapping TypeName="VendingModel.WaterSales">
+              <MappingFragment StoreEntitySet="WaterSales">
+                <ScalarProperty Name="ReceiptNumber" ColumnName="ReceiptNumber" />
+                <ScalarProperty Name="StageNumber" ColumnName="StageNumber" />
+                <ScalarProperty Name="EndDateTimeString" ColumnName="EndDateTimeString" />
+                <ScalarProperty Name="EndDateTime" ColumnName="EndDateTime" />
+                <ScalarProperty Name="ChangeActualDiff" ColumnName="ChangeActualDiff" />
+                <ScalarProperty Name="ActualChangeDispensed" ColumnName="ActualChangeDispensed" />
+                <ScalarProperty Name="ProductName" ColumnName="ProductName" />
+                <ScalarProperty Name="PRICE_PER_ITEM_MDE" ColumnName="PRICE_PER_ITEM_MDE" />
+                <ScalarProperty Name="TaxSystemInUse" ColumnName="TaxSystemInUse" />
+                <ScalarProperty Name="Quantity" ColumnName="Quantity" />
+                <ScalarProperty Name="UserCash" ColumnName="UserCash" />
+                <ScalarProperty Name="StartDateTimeStr" ColumnName="StartDateTimeStr" />
+                <ScalarProperty Name="StartDateTime" ColumnName="StartDateTime" />
+                <ScalarProperty Name="WaterDeviceID" ColumnName="WaterDeviceID" />
+                <ScalarProperty Name="ID" ColumnName="ID" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="WaterDeviceCommands">
+            <EntityTypeMapping TypeName="VendingModel.WaterDeviceCommands">
+              <MappingFragment StoreEntitySet="WaterDeviceCommands">
+                <ScalarProperty Name="Result" ColumnName="Result" />
+                <ScalarProperty Name="AckDatetimeStr" ColumnName="AckDatetimeStr" />
+                <ScalarProperty Name="AckDatetime" ColumnName="AckDatetime" />
+                <ScalarProperty Name="RequestedDatetimeStr" ColumnName="RequestedDatetimeStr" />
+                <ScalarProperty Name="RequestedDatetime" ColumnName="RequestedDatetime" />
+                <ScalarProperty Name="FormedDatetimeStr" ColumnName="FormedDatetimeStr" />
+                <ScalarProperty Name="FormedDatetime" ColumnName="FormedDatetime" />
+                <ScalarProperty Name="Command" ColumnName="Command" />
+                <ScalarProperty Name="WaterDeviceID" ColumnName="WaterDeviceID" />
+                <ScalarProperty Name="ID" ColumnName="ID" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="WaterDeviceIncasso">
+            <EntityTypeMapping TypeName="VendingModel.WaterDeviceIncasso">
+              <MappingFragment StoreEntitySet="WaterDeviceIncasso">
+                <ScalarProperty Name="CommandID" ColumnName="CommandID" />
+                <ScalarProperty Name="IncassoBASum" ColumnName="IncassoBASum" />
+                <ScalarProperty Name="IncassoBABills" ColumnName="IncassoBABills" />
+                <ScalarProperty Name="IncassoCashboxSum" ColumnName="IncassoCashboxSum" />
+                <ScalarProperty Name="IncassoCashboxCoins" ColumnName="IncassoCashboxCoins" />
+                <ScalarProperty Name="IncassoDatetimeStr" ColumnName="IncassoDatetimeStr" />
+                <ScalarProperty Name="IncassoDatetime" ColumnName="IncassoDatetime" />
+                <ScalarProperty Name="WaterDeviceID" ColumnName="WaterDeviceID" />
+                <ScalarProperty Name="ID" ColumnName="ID" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="WaterDevices">
+            <EntityTypeMapping TypeName="VendingModel.WaterDevices">
+              <MappingFragment StoreEntitySet="WaterDevices">
+                <ScalarProperty Name="WaterTankHeigthcm" ColumnName="WaterTankHeigthcm" />
+                <ScalarProperty Name="SettingsVersion" ColumnName="SettingsVersion" />
+                <ScalarProperty Name="TaxSystemType" ColumnName="TaxSystemType" />
+                <ScalarProperty Name="PendingRegConfirmationDateTimeStr" ColumnName="PendingRegConfirmationDateTimeStr" />
+                <ScalarProperty Name="PendingRegConfirmationDateTime" ColumnName="PendingRegConfirmationDateTime" />
+                <ScalarProperty Name="PendingRegConfirmationIP" ColumnName="PendingRegConfirmationIP" />
+                <ScalarProperty Name="PendingRegConfirmed" ColumnName="PendingRegConfirmed" />
+                <ScalarProperty Name="PendingRegistrationGUID" ColumnName="PendingRegistrationGUID" />
+                <ScalarProperty Name="RegistrationResponse" ColumnName="RegistrationResponse" />
+                <ScalarProperty Name="PRICE_PER_ITEM_MDE" ColumnName="PRICE_PER_ITEM_MDE" />
+                <ScalarProperty Name="CustomerServiceContactPhone" ColumnName="CustomerServiceContactPhone" />
+                <ScalarProperty Name="ProductName" ColumnName="ProductName" />
+                <ScalarProperty Name="LocationLongtitude" ColumnName="LocationLongtitude" />
+                <ScalarProperty Name="LocationLatitude" ColumnName="LocationLatitude" />
+                <ScalarProperty Name="LocationAddress" ColumnName="LocationAddress" />
+                <ScalarProperty Name="RegistrationRequestDateTimeStr" ColumnName="RegistrationRequestDateTimeStr" />
+                <ScalarProperty Name="RegistrationRequestDateTime" ColumnName="RegistrationRequestDateTime" />
+                <ScalarProperty Name="RegistrationRequest" ColumnName="RegistrationRequest" />
+                <ScalarProperty Name="PendingRegistration" ColumnName="PendingRegistration" />
+                <ScalarProperty Name="Suspended" ColumnName="Suspended" />
+                <ScalarProperty Name="Valid" ColumnName="Valid" />
+                <ScalarProperty Name="PublicKey" ColumnName="PublicKey" />
+                <ScalarProperty Name="RegistrationDateTimeStr" ColumnName="RegistrationDateTimeStr" />
+                <ScalarProperty Name="RegistrationDateTime" ColumnName="RegistrationDateTime" />
+                <ScalarProperty Name="HardwareID" ColumnName="HardwareID" />
+                <ScalarProperty Name="AccountID" ColumnName="AccountID" />
+                <ScalarProperty Name="ID" ColumnName="ID" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="WaterDeviceTelemetry">
+            <EntityTypeMapping TypeName="VendingModel.WaterDeviceTelemetry">
+              <MappingFragment StoreEntitySet="WaterDeviceTelemetry">
+                <ScalarProperty Name="ProgramVersion" ColumnName="ProgramVersion" />
+                <ScalarProperty Name="MDBInitStep" ColumnName="MDBInitStep" />
+                <ScalarProperty Name="VMCMode" ColumnName="VMCMode" />
+                <ScalarProperty Name="KKTReceiptNextNumber" ColumnName="KKTReceiptNextNumber" />
+                <ScalarProperty Name="LastStageClosedDateTimeStr" ColumnName="LastStageClosedDateTimeStr" />
+                <ScalarProperty Name="LastStageClosedDateTime" ColumnName="LastStageClosedDateTime" />
+                <ScalarProperty Name="BASum" ColumnName="BASum" />
+                <ScalarProperty Name="BABillsCount" ColumnName="BABillsCount" />
+                <ScalarProperty Name="KKTPrinterPaperEnding" ColumnName="KKTPrinterPaperEnding" />
+                <ScalarProperty Name="KKTPrinterPaperJammed" ColumnName="KKTPrinterPaperJammed" />
+                <ScalarProperty Name="KKTPrinterOverHeated" ColumnName="KKTPrinterOverHeated" />
+                <ScalarProperty Name="KKTPrinterCutterError" ColumnName="KKTPrinterCutterError" />
+                <ScalarProperty Name="KKTPrinterNonRecoverableError" ColumnName="KKTPrinterNonRecoverableError" />
+                <ScalarProperty Name="KKTPrinterPaperEmpty" ColumnName="KKTPrinterPaperEmpty" />
+                <ScalarProperty Name="KKTPrinterConnected" ColumnName="KKTPrinterConnected" />
+                <ScalarProperty Name="KKTCurrentMode" ColumnName="KKTCurrentMode" />
+                <ScalarProperty Name="KKTReceiptOpened" ColumnName="KKTReceiptOpened" />
+                <ScalarProperty Name="KKTStageNumber" ColumnName="KKTStageNumber" />
+                <ScalarProperty Name="KKTStageOver24h" ColumnName="KKTStageOver24h" />
+                <ScalarProperty Name="KKTStageOpened" ColumnName="KKTStageOpened" />
+                <ScalarProperty Name="KKTMfgNumber" ColumnName="KKTMfgNumber" />
+                <ScalarProperty Name="TotalHoursWorked" ColumnName="TotalHoursWorked" />
+                <ScalarProperty Name="TotalLitersDIspensed" ColumnName="TotalLitersDIspensed" />
+                <ScalarProperty Name="IsFillPumpSocketActive" ColumnName="IsFillPumpSocketActive" />
+                <ScalarProperty Name="IsExternalLightOn" ColumnName="IsExternalLightOn" />
+                <ScalarProperty Name="IsHeaterOn" ColumnName="IsHeaterOn" />
+                <ScalarProperty Name="WaterLevelPercent" ColumnName="WaterLevelPercent" />
+                <ScalarProperty Name="AmbientRelativeHumidity" ColumnName="AmbientRelativeHumidity" />
+                <ScalarProperty Name="AmbientTempCelsius" ColumnName="AmbientTempCelsius" />
+                <ScalarProperty Name="InboxTempCelsius" ColumnName="InboxTempCelsius" />
+                <ScalarProperty Name="WaterTempCelsius" ColumnName="WaterTempCelsius" />
+                <ScalarProperty Name="IncassoSum" ColumnName="IncassoSum" />
+                <ScalarProperty Name="CBSum" ColumnName="CBSum" />
+                <ScalarProperty Name="CBCount" ColumnName="CBCount" />
+                <ScalarProperty Name="CCSum" ColumnName="CCSum" />
+                <ScalarProperty Name="CC1RURCount" ColumnName="CC1RURCount" />
+                <ScalarProperty Name="CC2RURCount" ColumnName="CC2RURCount" />
+                <ScalarProperty Name="CC5RURCount" ColumnName="CC5RURCount" />
+                <ScalarProperty Name="CC10RURCount" ColumnName="CC10RURCount" />
+                <ScalarProperty Name="WaterDeviceID" ColumnName="WaterDeviceID" />
+                <ScalarProperty Name="DateTimeStr" ColumnName="DateTimeStr" />
+                <ScalarProperty Name="DateTime" ColumnName="DateTime" />
+                <ScalarProperty Name="ID" ColumnName="ID" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="CryptoKeys">
+            <EntityTypeMapping TypeName="VendingModel.CryptoKeys">
+              <MappingFragment StoreEntitySet="CryptoKeys">
+                <ScalarProperty Name="PublicKey" ColumnName="PublicKey" />
+                <ScalarProperty Name="PrivateKey" ColumnName="PrivateKey" />
+                <ScalarProperty Name="ID" ColumnName="ID" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="WebSettings">
+            <EntityTypeMapping TypeName="VendingModel.WebSettings">
+              <MappingFragment StoreEntitySet="WebSettings">
+                <ScalarProperty Name="LastSavedDateTimeStr" ColumnName="LastSavedDateTimeStr" />
+                <ScalarProperty Name="BingMapsAPIKey" ColumnName="BingMapsAPIKey" />
+                <ScalarProperty Name="SMTPUseSSL" ColumnName="SMTPUseSSL" />
+                <ScalarProperty Name="SMTPPort" ColumnName="SMTPPort" />
+                <ScalarProperty Name="SMTPHost" ColumnName="SMTPHost" />
+                <ScalarProperty Name="MailPassword" ColumnName="MailPassword" />
+                <ScalarProperty Name="MailLogin" ColumnName="MailLogin" />
+                <ScalarProperty Name="MailUseSMTPAuth" ColumnName="MailUseSMTPAuth" />
+                <ScalarProperty Name="RegAccountMailSubject" ColumnName="RegAccountMailSubject" />
+                <ScalarProperty Name="RegDeviceMailSubject" ColumnName="RegDeviceMailSubject" />
+                <ScalarProperty Name="EMailDisplayName" ColumnName="EMailDisplayName" />
+                <ScalarProperty Name="MailFromAddress" ColumnName="MailFromAddress" />
+                <ScalarProperty Name="ServerEndPoint" ColumnName="ServerEndPoint" />
+                <ScalarProperty Name="SiteName" ColumnName="SiteName" />
+                <ScalarProperty Name="AdminEmail" ColumnName="AdminEmail" />
+                <ScalarProperty Name="ID" ColumnName="ID" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="AccountLog">
+            <EntityTypeMapping TypeName="VendingModel.AccountLog">
+              <MappingFragment StoreEntitySet="AccountLog">
+                <ScalarProperty Name="AccountID" ColumnName="AccountID" />
+                <ScalarProperty Name="Description" ColumnName="Description" />
+                <ScalarProperty Name="EventText" ColumnName="EventText" />
+                <ScalarProperty Name="DateTimeStr" ColumnName="DateTimeStr" />
+                <ScalarProperty Name="DateTime" ColumnName="DateTime" />
+                <ScalarProperty Name="IPAddress" ColumnName="IPAddress" />
+                <ScalarProperty Name="ID" ColumnName="ID" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="SystemLog">
+            <EntityTypeMapping TypeName="VendingModel.SystemLog">
+              <MappingFragment StoreEntitySet="SystemLog">
+                <ScalarProperty Name="UserID" ColumnName="UserID" />
+                <ScalarProperty Name="Description" ColumnName="Description" />
+                <ScalarProperty Name="EventText" ColumnName="EventText" />
+                <ScalarProperty Name="IPAddress" ColumnName="IPAddress" />
+                <ScalarProperty Name="DateTimeStr" ColumnName="DateTimeStr" />
+                <ScalarProperty Name="DateTime" ColumnName="DateTime" />
+                <ScalarProperty Name="ID" ColumnName="ID" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="WaterDeviceState">
+            <EntityTypeMapping TypeName="VendingModel.WaterDeviceState">
+              <MappingFragment StoreEntitySet="WaterDeviceState">
+                <ScalarProperty Name="ProgramVersion" ColumnName="ProgramVersion" />
+                <ScalarProperty Name="MDBInitStep" ColumnName="MDBInitStep" />
+                <ScalarProperty Name="VMCMode" ColumnName="VMCMode" />
+                <ScalarProperty Name="KKTReceiptNextNumber" ColumnName="KKTReceiptNextNumber" />
+                <ScalarProperty Name="LastStageClosedDateTimeStr" ColumnName="LastStageClosedDateTimeStr" />
+                <ScalarProperty Name="LastStageClosedDateTime" ColumnName="LastStageClosedDateTime" />
+                <ScalarProperty Name="BASum" ColumnName="BASum" />
+                <ScalarProperty Name="BABillsCount" ColumnName="BABillsCount" />
+                <ScalarProperty Name="KKTPrinterPaperEnding" ColumnName="KKTPrinterPaperEnding" />
+                <ScalarProperty Name="KKTPrinterPaperJammed" ColumnName="KKTPrinterPaperJammed" />
+                <ScalarProperty Name="KKTPrinterOverHeated" ColumnName="KKTPrinterOverHeated" />
+                <ScalarProperty Name="KKTPrinterCutterError" ColumnName="KKTPrinterCutterError" />
+                <ScalarProperty Name="KKTPrinterNonRecoverableError" ColumnName="KKTPrinterNonRecoverableError" />
+                <ScalarProperty Name="KKTPrinterPaperEmpty" ColumnName="KKTPrinterPaperEmpty" />
+                <ScalarProperty Name="KKTPrinterConnected" ColumnName="KKTPrinterConnected" />
+                <ScalarProperty Name="KKTCurrentMode" ColumnName="KKTCurrentMode" />
+                <ScalarProperty Name="KKTReceiptOpened" ColumnName="KKTReceiptOpened" />
+                <ScalarProperty Name="KKTStageNumber" ColumnName="KKTStageNumber" />
+                <ScalarProperty Name="KKTStageOver24h" ColumnName="KKTStageOver24h" />
+                <ScalarProperty Name="KKTStageOpened" ColumnName="KKTStageOpened" />
+                <ScalarProperty Name="KKTMfgNumber" ColumnName="KKTMfgNumber" />
+                <ScalarProperty Name="TotalHoursWorked" ColumnName="TotalHoursWorked" />
+                <ScalarProperty Name="TotalLitersDIspensed" ColumnName="TotalLitersDIspensed" />
+                <ScalarProperty Name="IsFillPumpSocketActive" ColumnName="IsFillPumpSocketActive" />
+                <ScalarProperty Name="IsExternalLightOn" ColumnName="IsExternalLightOn" />
+                <ScalarProperty Name="IsHeaterOn" ColumnName="IsHeaterOn" />
+                <ScalarProperty Name="WaterLevelPercent" ColumnName="WaterLevelPercent" />
+                <ScalarProperty Name="AmbientRelativeHumidity" ColumnName="AmbientRelativeHumidity" />
+                <ScalarProperty Name="AmbientTempCelsius" ColumnName="AmbientTempCelsius" />
+                <ScalarProperty Name="InboxTempCelsius" ColumnName="InboxTempCelsius" />
+                <ScalarProperty Name="WaterTempCelsius" ColumnName="WaterTempCelsius" />
+                <ScalarProperty Name="IncassoSum" ColumnName="IncassoSum" />
+                <ScalarProperty Name="CBSum" ColumnName="CBSum" />
+                <ScalarProperty Name="CBCount" ColumnName="CBCount" />
+                <ScalarProperty Name="CCSum" ColumnName="CCSum" />
+                <ScalarProperty Name="CC1RURCount" ColumnName="CC1RURCount" />
+                <ScalarProperty Name="CC2RURCount" ColumnName="CC2RURCount" />
+                <ScalarProperty Name="CC5RURCount" ColumnName="CC5RURCount" />
+                <ScalarProperty Name="CC10RURCount" ColumnName="CC10RURCount" />
+                <ScalarProperty Name="WaterDeviceID" ColumnName="WaterDeviceID" />
+                <ScalarProperty Name="DateTimeStr" ColumnName="DateTimeStr" />
+                <ScalarProperty Name="DateTime" ColumnName="DateTime" />
+                <ScalarProperty Name="ID" ColumnName="ID" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+        </EntityContainerMapping>
+      </Mapping>
+    </edmx:Mappings>
+  </edmx:Runtime>
+  <!-- EF Designer content (DO NOT EDIT MANUALLY BELOW HERE) -->
+  <edmx:Designer xmlns="http://schemas.microsoft.com/ado/2009/11/edmx">
+    <edmx:Connection>
+      <DesignerInfoPropertySet>
+        <DesignerProperty Name="MetadataArtifactProcessing" Value="EmbedInOutputAssembly" />
+      </DesignerInfoPropertySet>
+    </edmx:Connection>
+    <edmx:Options>
+      <DesignerInfoPropertySet>
+        <DesignerProperty Name="ValidateOnBuild" Value="true" />
+        <DesignerProperty Name="EnablePluralization" Value="False" />
+        <DesignerProperty Name="CodeGenerationStrategy" Value="Нет" />
+        <DesignerProperty Name="IncludeForeignKeysInModel" Value="True" />
+        <DesignerProperty Name="UseLegacyProvider" Value="False" />
+      </DesignerInfoPropertySet>
+    </edmx:Options>
+    <!-- Diagram content (shape and connector positions) -->
+    <edmx:Diagrams>
+    </edmx:Diagrams>
+  </edmx:Designer>
+</edmx:Edmx>

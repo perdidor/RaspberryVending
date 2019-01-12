@@ -1,0 +1,24 @@
+﻿<Page
+    x:Class="RPiVendApp.Registration"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:RPiVendApp"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d" Width="800" Height="480" FontWeight="Bold">
+
+    <Grid Background="#FF98A1BF">
+        <TextBlock HorizontalAlignment="Left" TextWrapping="Wrap" Text="Учетная запись: " VerticalAlignment="Top" Margin="24,71,0,0" FontWeight="Bold" FontSize="30"/>
+        <TextBlock x:Name="userid" HorizontalAlignment="Left" TextWrapping="Wrap" Text="нет лицензии" VerticalAlignment="Top" Margin="279,71,0,0" FontWeight="Bold" FontSize="30" Foreground="#FFFF1100"/>
+        <TextBlock HorizontalAlignment="Left" TextWrapping="Wrap" Text="Выдана: " VerticalAlignment="Top" Margin="24,122,0,0" FontWeight="Bold" FontSize="30"/>
+        <TextBlock HorizontalAlignment="Left" TextWrapping="Wrap" Text="Ограничение количества устройств: " VerticalAlignment="Top" Margin="24,172,0,0" FontWeight="Bold" FontSize="30"/>
+        <TextBlock x:Name="regdatetime" HorizontalAlignment="Left" TextWrapping="Wrap" Text="нет лицензии" VerticalAlignment="Top" Margin="279,122,0,0" FontWeight="Bold" FontSize="30" Foreground="#FFFF1100"/>
+        <TextBlock x:Name="devcountlimit" HorizontalAlignment="Left" TextWrapping="Wrap" Text="нет лицензии" VerticalAlignment="Top" Margin="578,172,0,0" FontWeight="Bold" FontSize="30" Foreground="#FFFF1100"/>
+        <Image x:Name="pic" HorizontalAlignment="Left" Height="128" Margin="340,331,0,0" VerticalAlignment="Top" Width="128" RenderTransformOrigin="-0.275,-0.013" Source="Assets/Empty.png"/>
+        <TextBlock x:Name="statustext" HorizontalAlignment="Left" TextWrapping="Wrap" Text="ожидание регистрации" VerticalAlignment="Top" Margin="198,17,0,0" FontWeight="Bold" FontSize="30"/>
+        <TextBlock HorizontalAlignment="Left" TextWrapping="Wrap" Text="Состояние: " VerticalAlignment="Top" Margin="24,17,0,0" FontWeight="Bold" FontSize="30"/>
+        <TextBlock x:Name="regresponse" HorizontalAlignment="Left" TextWrapping="Wrap" Text="нет соединения" VerticalAlignment="Top" Margin="262,226,0,0" FontWeight="Bold" FontSize="30"/>
+        <TextBlock HorizontalAlignment="Left" TextWrapping="Wrap" Text="Ответ сервера: " VerticalAlignment="Top" Margin="24,226,0,0" FontWeight="Bold" FontSize="30"/>
+
+    </Grid>
+</Page>
