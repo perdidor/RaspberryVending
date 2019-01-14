@@ -763,13 +763,13 @@ namespace RPiVendApp
                         }
                         if (StructuralComparisons.StructuralEqualityComparer.Equals(tmpaddr1, GlobalVars.WaterTempSensorAddress))
                         {
-                            StartPage.SystemState.WaterTempCelsius = BitConverter.ToSingle(tmpaddr1, 0);
-                            StartPage.SystemState.InboxTempCelsius = BitConverter.ToSingle(tmpaddr2, 0);
+                            StartPage.SystemState.WaterTempCelsius = BitConverter.ToSingle(tmptemp1, 0);
+                            StartPage.SystemState.InboxTempCelsius = BitConverter.ToSingle(tmptemp2, 0);
                         }
                         if (StructuralComparisons.StructuralEqualityComparer.Equals(tmpaddr2, GlobalVars.WaterTempSensorAddress))
                         {
-                            StartPage.SystemState.WaterTempCelsius = BitConverter.ToSingle(tmpaddr2, 0);
-                            StartPage.SystemState.InboxTempCelsius = BitConverter.ToSingle(tmpaddr1, 0);
+                            StartPage.SystemState.WaterTempCelsius = BitConverter.ToSingle(tmptemp2, 0);
+                            StartPage.SystemState.InboxTempCelsius = BitConverter.ToSingle(tmptemp1, 0);
                         }
                         StartPage.SystemState.AmbientTempCelsius = BitConverter.ToSingle(tmpambtemp, 0);
                         StartPage.SystemState.AmbientRelativeHumidity = BitConverter.ToSingle(tmpambhum, 0);
