@@ -98,5 +98,8 @@ public static class WWWVars
     /// SMTP server security
     /// </summary>
     public static bool SMTPUseSSL;
-    public static string BingMapsAPIKey = "ArjzrGspjJHXBJLasyo-Gpsln_ezAyEwE1NHzcFDITvJ2LPedZaeWFc8TI12vtuK";
+    /// <summary>
+    /// Ключ разработчика Bing Maps
+    /// </summary>
+    public static string BingMapsAPIKey;
 }
