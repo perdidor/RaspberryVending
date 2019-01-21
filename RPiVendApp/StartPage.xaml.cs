@@ -323,7 +323,7 @@ namespace RPiVendApp
         /// <returns></returns>
         private void RunAfterInit()
         {
-            if (GlobalVars.UseKKT) CashDeskHelper.CashDesk_Init();
+            if (CurrentDeviceSettings.UseKKT) CashDeskHelper.CashDesk_Init();
             MDB.ConnectMDBSerialPort(CashDeskDeviceID);
             I2c_Init();
 #pragma warning disable CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
@@ -377,6 +377,8 @@ namespace RPiVendApp
             /// </summary>
             public int TaxSystem = 0;
             public long SettingsVersion = 0;
+            public bool UseKKT = false;
+            public byte[] WaterTempSensorAddress = new byte[8] { 0, 0, 0, 0, 0, 0, 0, 0 };
         }
 
         public static DeviceSettings CurrentDeviceSettings;

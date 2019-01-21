@@ -35,4 +35,6 @@ public class DeviceSettings
     /// </summary>
     public int TaxSystem = 00;
     public long SettingsVersion = 0;
+    public bool UseKKT = false;
+    public byte[] WaterTempSensorAddress = new byte[8] { 0, 0, 0, 0, 0, 0, 0, 0 };
 }

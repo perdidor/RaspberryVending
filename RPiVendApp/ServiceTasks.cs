@@ -36,7 +36,7 @@ namespace RPiVendApp
             Task.Run(ExternalLightSwitcher, StartPage.GlobalCancellationTokenSource.Token);
             Task.Run(MDBBAStatus, StartPage.GlobalCancellationTokenSource.Token);
             Task.Run(MDBCCStatus, StartPage.GlobalCancellationTokenSource.Token);
-            if (GlobalVars.UseKKT) Task.Run(KKTStatusWatchTask, StartPage.GlobalCancellationTokenSource.Token);
+            if (StartPage.CurrentDeviceSettings.UseKKT) Task.Run(KKTStatusWatchTask, StartPage.GlobalCancellationTokenSource.Token);
             Task.Run(ReceiveCommands, StartPage.GlobalCancellationTokenSource.Token);
             Task.Run(InitialStartupWaiter, StartPage.GlobalCancellationTokenSource.Token);
         }
@@ -55,7 +55,7 @@ namespace RPiVendApp
             try
             {
                 await Task.Delay(30000);
-                while (StartPage.SystemState.MDBInitStep != 5 || (GlobalVars.UseKKT && (StartPage.SystemState.KKTCurrentMode != 1 || !StartPage.SystemState.KKTStageOpened || StartPage.SystemState.KKTStageOver24h)))
+                while (StartPage.SystemState.MDBInitStep != 5 || (StartPage.CurrentDeviceSettings.UseKKT && (StartPage.SystemState.KKTCurrentMode != 1 || !StartPage.SystemState.KKTStageOpened || StartPage.SystemState.KKTStageOver24h)))
                 {
                     await Task.Delay(5000);
                 }
@@ -761,12 +761,12 @@ namespace RPiVendApp
                             Array.Reverse(tmpambtemp, 0, tmpambtemp.Length);
                             Array.Reverse(tmpambhum, 0, tmpambhum.Length);
                         }
-                        if (StructuralComparisons.StructuralEqualityComparer.Equals(tmpaddr1, GlobalVars.WaterTempSensorAddress))
+                        if (StructuralComparisons.StructuralEqualityComparer.Equals(tmpaddr1, StartPage.CurrentDeviceSettings.WaterTempSensorAddress))
                         {
                             StartPage.SystemState.WaterTempCelsius = BitConverter.ToSingle(tmptemp1, 0);
                             StartPage.SystemState.InboxTempCelsius = BitConverter.ToSingle(tmptemp2, 0);
                         }
-                        if (StructuralComparisons.StructuralEqualityComparer.Equals(tmpaddr2, GlobalVars.WaterTempSensorAddress))
+                        if (StructuralComparisons.StructuralEqualityComparer.Equals(tmpaddr2, StartPage.CurrentDeviceSettings.WaterTempSensorAddress))
                         {
                             StartPage.SystemState.WaterTempCelsius = BitConverter.ToSingle(tmptemp2, 0);
                             StartPage.SystemState.InboxTempCelsius = BitConverter.ToSingle(tmptemp1, 0);

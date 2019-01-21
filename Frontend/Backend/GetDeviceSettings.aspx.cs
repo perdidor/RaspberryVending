@@ -105,7 +105,9 @@ public partial class Backend_GetDeviceSettings : System.Web.UI.Page
                         TaxSystem = tmpdev.TaxSystemType,
                         TankHeigthcm = tmpdev.WaterTankHeigthcm,
                         Latitude = (double)tmpdev.LocationLatitude,
-                        Longitude = (double)tmpdev.LocationLongtitude
+                        Longitude = (double)tmpdev.LocationLongtitude,
+                        UseKKT = tmpdev.UseKKT,
+                        WaterTempSensorAddress = tmpdev.WaterTempSensorAddress
                     };
                     var xs = new XmlSerializer(tmp.GetType());
                     var xml = new Utf8StringWriter();

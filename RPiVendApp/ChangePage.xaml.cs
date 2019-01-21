@@ -51,7 +51,7 @@ namespace RPiVendApp
                 dispenselabel.Text = Math.Round(StartPage.UserDeposit, 0, MidpointRounding.AwayFromZero).ToString().PadLeft(3,'0');
             });
 #pragma warning restore CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
-            if (GlobalVars.UseKKT && Math.Round(StartPage.CurrentSaleSession.Quantity, 3) > 0)
+            if (StartPage.CurrentDeviceSettings.UseKKT && Math.Round(StartPage.CurrentSaleSession.Quantity, 3) > 0)
             {
                 try
                 {

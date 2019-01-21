@@ -13,16 +13,7 @@ namespace RPiVendApp
         public static long RegID;
 
         public static CryptographicKey ClientKeyPair;
-        public static string ServerPublicKey = "BgIAAACkAABSU0ExAAgAAAEAAQDBXnPSkZqmSpkRP+WLx0xBDJnHpbE/ChTn1t1a1reb+vIEdhPLGewBtRabZ+98MyhgWpkTH6Q4QEwfJB6+Fd5TEruarODGaT41fdMg" +
-            "GCaFOlIlWTy9kks7G9DtHRuv5OYlBfxEkJz+uWTf+13HwWWyeNJdUTMNd4p3BfUARWT9lw54CAulEOdku8TvUg1Th/1rQqdHIoQeLFsU8XrxYCoQ3XcAhglwkcBH2aLdRKUmrucYUqRWZ+8BtTO1XQ5ivTHq6wU5t88" +
-            "tDzsXCVDBDOVaEMKjqpOGgE4B1wo9GELcnqky2hpdbpwFXBdysswTuC4Xrw2ISUsA9HUAmPrLKEja";
-
-        public static string ProductName = "Вода питьевая";
-        public static string CustomerServiceContactPhone = "";
-        public static int PRICE_PER_ITEM_MDE = 0;
-        public static int TaxSystem = 00;
-        public static bool UseKKT = false;
-        public static byte[] WaterTempSensorAddress = new byte[8] { 0, 0, 0, 0, 0, 0, 0, 0 };
+        public static string ServerPublicKey = "Paste server public key here";
 
         /// <summary>
         /// Список строк для печати нефискальной информации на чеке

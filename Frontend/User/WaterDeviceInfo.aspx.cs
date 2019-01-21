@@ -3,6 +3,7 @@ using TwoFactorAuthNet;
 using System.Collections.Generic;
 using System.Linq;
 using System.Web;
+using System.Text;
 using System.Web.UI;
 using System.Globalization;
 using System.Web.UI.WebControls;
@@ -50,7 +51,6 @@ public partial class User_WaterDeviceInfo : System.Web.UI.Page
 
     protected void devactionpanel_Load(object sender, EventArgs e)
     {
-        //if (!ScriptManager.GetCurrent(Page).IsInAsyncPostBack) ;
         
     }
 
@@ -372,6 +372,8 @@ public partial class User_WaterDeviceInfo : System.Web.UI.Page
                         pricecell.Text = tmpdev.PRICE_PER_ITEM_MDE.ToString();
                         taxsystemcell.Text = tmpdev.TaxSystemType.ToString();
                         tankheigthcell.Text = tmpdev.WaterTankHeigthcm.ToString();
+                        watersensoraddresscell.Text = String.Join(String.Empty, Array.ConvertAll(tmpdev.WaterTempSensorAddress, x => x.ToString("X2")));
+                        usekktcell.SelectedValue = tmpdev.UseKKT ? "1" : "0";
                         devicesettingsversioncell.Text = tmpdev.SettingsVersion.ToString();
                     }
                     if (devcomponentspanel.Visible)
@@ -477,6 +479,9 @@ public partial class User_WaterDeviceInfo : System.Web.UI.Page
                     tmpdev.ProductName = rcptprodnamecell.Text;
                     tmpdev.CustomerServiceContactPhone = phonecell.Text;
                     tmpdev.PRICE_PER_ITEM_MDE = Convert.ToInt32(pricecell.Text);
+                    tmpdev.UseKKT = (usekktcell.SelectedValue == "1");
+                    tmpdev.WaterTempSensorAddress = Enumerable.Range(0, watersensoraddresscell.Text.Length).Where(x => x % 2 == 0).Select(x => Convert.ToByte(watersensoraddresscell.Text.Substring(x, 2), 16)).ToArray();
+                    tmpdev.TaxSystemType = Convert.ToInt32(taxsystemcell.Text);
                     tmpdev.SettingsVersion++;
                     dc.SaveChanges();
                     dbContextTransaction.Commit();
@@ -485,6 +490,8 @@ public partial class User_WaterDeviceInfo : System.Web.UI.Page
                     phonecell.Text = tmpdev.CustomerServiceContactPhone;
                     pricecell.Text = tmpdev.PRICE_PER_ITEM_MDE.ToString();
                     taxsystemcell.Text = tmpdev.TaxSystemType.ToString();
+                    watersensoraddresscell.Text = String.Join(String.Empty, Array.ConvertAll(tmpdev.WaterTempSensorAddress, x => x.ToString("X2")));
+                    usekktcell.SelectedValue = tmpdev.UseKKT ? "1" : "0";
                     devicesettingsversioncell.Text = tmpdev.SettingsVersion.ToString();
                     Logger.AccountLog(Request.UserHostAddress, "Обновлены настройки устройства №" + tmpdev.ID, "", tmpacc.ID);
                     Logger.SystemLog(Request.UserHostAddress, "Обновлены настройки устройства №" + tmpdev.ID, "", "Server");
@@ -497,57 +504,10 @@ public partial class User_WaterDeviceInfo : System.Web.UI.Page
             }
         }
         FillTablesWithData();
-        //devactionpanel.Update();
     }
-
-    //protected void incasstotpbutton_Click(object sender, EventArgs e)
-    //{
-    //    TwoFactorAuth tfa = new TwoFactorAuth("La Gioia Water Vending");
-    //    Accounts useracc = null;
-    //    using (VendingModelContainer dc = new VendingModelContainer())
-    //    {
-    //        useracc = dc.Accounts.First(x => x.UserID == HttpContext.Current.User.Identity.Name);
-    //        if (useracc.TOTPSecret != "" && incassototp.Text != "")
-    //        {
-    //            if (tfa.VerifyCode(useracc.TOTPSecret, incassototp.Text))
-    //            {
-    //                DateTime cdt = DateTime.Now;
-    //                long cdtlong = Convert.ToInt64(cdt.ToString("yyyyMMddHHmmss"));
-    //                string cdtstr = cdt.ToString("dd.MM.yyyy HH:mm:ss");
-    //                //формируем команду инкассации
-    //                WaterDeviceCommands tmpincassocmd = new WaterDeviceCommands()
-    //                {
-    //                    AckDatetime = 0,
-    //                    AckDatetimeStr = "",
-    //                    Command = WDCmdSet.Incassation.Command,
-    //                    FormedDatetime = cdtlong,
-    //                    FormedDatetimeStr = cdtstr,
-    //                    WaterDeviceID = wvdid,
-    //                    RequestedDatetime = 0,
-    //                    RequestedDatetimeStr = "",
-    //                    Result = ""
-    //                };
-    //                dc.WaterDeviceCommands.Add(tmpincassocmd);
-    //                dc.SaveChanges();
-    //                incassototpbox.Visible = false;
-    //                makeincassobutton.Visible = true;
-    //                ScriptManager.RegisterClientScriptBlock((sender as Control), this.GetType(), "alert", "alert('Команда обнуления счетчиков наличности сформирована. Дождитесь выхода устройства из рабочего режима, произведите изъятие наличных из купюроприемника и кэшбокса, затем верните устройство в рабочий режим с помощью этой панели управления.')", true);
-    //            }
-    //            else
-    //            {
-    //                incasstotpmsg.Text = "Неверный одноразовый пароль";
-    //                incassototpbox.Visible = true;
-    //                makeincassobutton.Visible = false;
-    //            }
-    //        }
-    //    }
-    //    FillTablesWithData();
-    //}
 
     protected void devmodecb_SelectedIndexChanged(object sender, EventArgs e)
     {
-        //changedevmodemsg.Text = devmodecb.SelectedValue.ToString();
-        //devmodecb.SelectedIndexChanged += (EventHandler)devmodecb_SelectedIndexChanged;
         if (devmodecb.SelectedIndex != 0 && devmodecb.Enabled)
         {
             changedevmodebutton.Enabled = true;

@@ -458,6 +458,22 @@
                                         <asp:TextBox ID="tankheigthcell" runat="server">N\A</asp:TextBox></asp:TableCell>
                                     <asp:TableCell runat="server" Height="60px" Width="420px"></asp:TableCell>
                                 </asp:TableRow>
+                                <asp:TableRow ID="watersensoraddressrow" runat="server" HorizontalAlign="Center" VerticalAlign="Middle" >
+                                    <asp:TableCell runat="server" Height="60px" Width="180px">Адрес 1w датчика температуры воды DS18B20 (8 HEX байт без пробелов)</asp:TableCell>
+                                    <asp:TableCell runat="server" Height="60px" Width="150px">
+                                        <asp:TextBox ID="watersensoraddresscell" runat="server">N\A</asp:TextBox></asp:TableCell>
+                                    <asp:TableCell runat="server" Height="60px" Width="420px"></asp:TableCell>
+                                </asp:TableRow>
+                                <asp:TableRow ID="usekktrow" runat="server" HorizontalAlign="Center" VerticalAlign="Middle" >
+                                    <asp:TableCell runat="server" Height="60px" Width="180px">Адрес 1w датчика температуры воды DS18B20</asp:TableCell>
+                                    <asp:TableCell runat="server" Height="60px" Width="150px">
+                                        <asp:DropDownList ID="usekktcell" runat="server">
+                                            <asp:ListItem Value="1">ДА</asp:ListItem>
+                                            <asp:ListItem Value="0">НЕТ</asp:ListItem>
+                                        </asp:DropDownList>
+                                        </asp:TableCell>
+                                    <asp:TableCell runat="server" Height="60px" Width="420px">8 HEX байт без пробелов 0123456789ABCDEF</asp:TableCell>
+                                </asp:TableRow>
                                 <asp:TableRow ID="devicesettingsversionrow" runat="server" HorizontalAlign="Center" VerticalAlign="Middle" >
                                     <asp:TableCell runat="server" Height="60px" Width="180px">Версия настроек</asp:TableCell>
                                     <asp:TableCell ID="devicesettingsversioncell" runat="server" Height="60px" Width="150px">N\A</asp:TableCell>
