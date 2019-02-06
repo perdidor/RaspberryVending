@@ -34,12 +34,7 @@ public partial class User_ConfirmRegistration : System.Web.UI.Page
                         long cdt = Convert.ToInt64(dt.ToString("yyyyMMddHHmmss"));
                         string cdtstr = dt.ToString("dd.MM.yyyy HH:mm:ss");
                         WaterDevices tmpwd = dc.WaterDevices.Where(x => x.PendingRegistration && x.PendingRegistrationGUID == prg && x.ID == wvdid && !x.PendingRegConfirmed).First();
-                        //инициализируем криптодвижок для подписи
-                        CspParameters cspParams = new CspParameters();
-                        cspParams.ProviderType = 24;
-                        RSACryptoServiceProvider rsaProvider = new RSACryptoServiceProvider(cspParams);
                         CryptoHelper ch = new CryptoHelper();
-                        rsaProvider.ImportCspBlob(ch.PrivateKey);
                         SHA512 sha512 = new SHA512Managed();
                         //вычисляем хеш открытого ключа устройства
                         byte[] hash = sha512.ComputeHash(tmpwd.PublicKey);
@@ -51,7 +46,7 @@ public partial class User_ConfirmRegistration : System.Web.UI.Page
                             RegID = tmpwd.ID,
                             ServerEndPoint = output
                         };
-                        authresp.Signature = Convert.ToBase64String(rsaProvider.SignHash(hash, HashAlgorithmName.SHA512, RSASignaturePadding.Pkcs1));
+                        authresp.Signature = Convert.ToBase64String(ch.SignHashedData(hash));
                         int activedevicescount = dc.WaterDevices.Where(x => x.AccountID == tmpwd.AccountID && x.Valid && !x.Suspended && !x.PendingRegistration).Count();
                         int pendingdevicescount = dc.WaterDevices.Where(x => x.AccountID == tmpwd.AccountID && x.Valid && !x.Suspended && x.PendingRegistration).Count();
                         Accounts tmpacc = dc.Accounts.Where(x => x.ID == tmpwd.AccountID && x.Valid && !x.Suspended).First();

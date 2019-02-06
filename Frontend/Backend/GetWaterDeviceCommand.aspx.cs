@@ -59,10 +59,9 @@ public partial class Backend_GetWaterDeviceCommand : System.Web.UI.Page
                 };
                 RSACryptoServiceProvider rsaProvider = new RSACryptoServiceProvider(cspParams);
                 CryptoHelper ch = new CryptoHelper();
-                rsaProvider.ImportCspBlob(ch.PrivateKey);
                 //расшифровываем симметричный ключ и вектор инициализации
-                byte[] AESKeyBytes = rsaProvider.Decrypt(encryptedaeskeybytes, false);
-                byte[] AESIVBytes = rsaProvider.Decrypt(encryptedivbytes, false);
+                byte[] AESKeyBytes = ch.DecryptData(encryptedaeskeybytes);
+                byte[] AESIVBytes = ch.DecryptData(encryptedivbytes);
                 AesCryptoServiceProvider AESProv = new AesCryptoServiceProvider
                 {
                     Mode = CipherMode.CBC,

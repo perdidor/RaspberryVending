@@ -30,94 +30,48 @@ public partial class Backend_WaterDeviceStateLog : System.Web.UI.Page
     {
         using (VendingModelContainer dc = new VendingModelContainer())
         {
-            using (var dbContextTransaction = dc.Database.BeginTransaction())
+            try
             {
-                try
+                DateTime dt = DateTime.Now;
+                CryptoHelper ch = new CryptoHelper();
+                long cdt = Convert.ToInt64(dt.ToString("yyyyMMddHHmmss"));
+                string cdtstr = dt.ToString("dd.MM.yyyy HH:mm:ss");
+                var waterdevices = dc.WaterDevices;
+                //считываем запрос
+                string encryptedrequest = Request.Form["Request"];
+                string signature = Request.Form["Signature"];
+                string encryptedaeskey = Request.Form["AData"];
+                string encryptediv = Request.Form["BData"];
+                var devicestable = dc.WaterDevices;
+                WaterDeviceTelemetry logentry = null;
+                bool signcorrect = ch.DecryptVerifyDeviceLog(encryptedrequest, signature, encryptedaeskey, encryptediv, out logentry);
+                if (signcorrect)
                 {
-                    DateTime dt = DateTime.Now;
-                    long cdt = Convert.ToInt64(dt.ToString("yyyyMMddHHmmss"));
-                    string cdtstr = dt.ToString("dd.MM.yyyy HH:mm:ss");
-                    var waterdevices = dc.WaterDevices;
-                    //считываем запрос
-                    string encryptedrequest = Request.Form["Request"];
-                    byte[] encryptedrequestbytes = Convert.FromBase64String(encryptedrequest);
-                    string signature = Request.Form["Signature"];
-                    byte[] signaturebytes = Convert.FromBase64String(signature);
-                    string encryptedaeskey = Request.Form["AData"];
-                    byte[] encryptedaeskeybytes = Convert.FromBase64String(encryptedaeskey);
-                    string encryptediv = Request.Form["BData"];
-                    byte[] encryptedivbytes = Convert.FromBase64String(encryptediv);
-                    //инициализируем криптодвижок для расшифровки
-                    CspParameters cspParams = new CspParameters
-                    {
-                        ProviderType = 1
-                    };
-                    RSACryptoServiceProvider rsaProvider = new RSACryptoServiceProvider(cspParams);
-                    CryptoHelper ch = new CryptoHelper();
-                    rsaProvider.ImportCspBlob(ch.PrivateKey);
-                    //расшифровываем симметричный ключ и вектор инициализации
-                    byte[] AESKeyBytes = rsaProvider.Decrypt(encryptedaeskeybytes, false);
-                    byte[] AESIVBytes = rsaProvider.Decrypt(encryptedivbytes, false);
-                    AesCryptoServiceProvider AESProv = new AesCryptoServiceProvider
-                    {
-                        Mode = CipherMode.CBC,
-                        Padding = PaddingMode.PKCS7,
-                        KeySize = 128,
-                        Key = AESKeyBytes,
-                        IV = AESIVBytes
-                    };
-                    //расшифровываем запрос
-                    string plaintext = "";
-                    MemoryStream memoryStream = null;
+                    logentry.DateTime = cdt;
+                    logentry.DateTimeStr = cdtstr;
+                    var telemetrytable = dc.WaterDeviceTelemetry;
+                    var statetable = dc.WaterDeviceState;
                     try
                     {
-                        memoryStream = new MemoryStream(encryptedrequestbytes);
-                        using (CryptoStream cryptoStream = new CryptoStream(memoryStream, AESProv.CreateDecryptor(), CryptoStreamMode.Read))
-                        {
-                            plaintext = new StreamReader(cryptoStream, Encoding.UTF8).ReadToEnd();
-                        }
+                        WaterDeviceState tmpstate = statetable.Where(x => x.WaterDeviceID == logentry.WaterDeviceID).First();
+                        dc.Entry(tmpstate).CurrentValues.SetValues(logentry);
                     }
-                    finally
+                    catch
                     {
-                        if (memoryStream != null) memoryStream.Dispose();
+                        var tmpstate = (WaterDeviceState)logentry;
+                        statetable.Add(tmpstate);
                     }
-                    var devicestable = dc.WaterDevices;
-                    WaterDeviceTelemetry logentry = Deserialize<WaterDeviceTelemetry>(plaintext);
-                    //инициализируем криптодвижок для проверки подписи присланных данных
-                    rsaProvider = new RSACryptoServiceProvider();
-                    rsaProvider.ImportCspBlob(devicestable.First(x => x.ID == logentry.WaterDeviceID).PublicKey);
-                    bool signcorrect = rsaProvider.VerifyData(Encoding.UTF8.GetBytes(plaintext), CryptoConfig.MapNameToOID("SHA512"), signaturebytes);
-                    if (signcorrect)
-                    {
-                        logentry.DateTime = cdt;
-                        logentry.DateTimeStr = cdtstr;
-                        var telemetrytable = dc.WaterDeviceTelemetry;
-                        var statetable = dc.WaterDeviceState;
-                        try
-                        {
-                            WaterDeviceState tmpstate = statetable.Where(x => x.WaterDeviceID == logentry.WaterDeviceID).First();
-                            dc.Entry(tmpstate).CurrentValues.SetValues(logentry);
-                        }
-                        catch
-                        {
-                            var tmpstate = (WaterDeviceState)logentry;
-                            statetable.Add(tmpstate);
-                        }
-                        telemetrytable.Add(logentry);
-                        dc.SaveChanges();
-                    }
-                    //сохраняем изменения в БД
-                    dbContextTransaction.Commit();
+                    telemetrytable.Add(logentry);
+                    dc.SaveChanges();
                 }
-                catch /*(Exception ex)*/
-                {
-                    //что-то пошло не так, ошибка на любом этапе, откатываем изменения в БД
-                    dbContextTransaction.Rollback();
-                }
-                finally
-                {
+            }
+            catch /*(Exception ex)*/
+            {
 
-                }
+            }
+            finally
+            {
+
             }
         }
     }

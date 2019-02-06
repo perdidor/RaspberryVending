@@ -51,16 +51,10 @@ public partial class Backend_NewWaterDevice : System.Web.UI.Page
                     string requestxml = Encoding.UTF8.GetString(bytes);
                     //создаем объект запроса регистрации
                     WaterDeviceRegistrationRequest tmpreq = Deserialize<WaterDeviceRegistrationRequest>(requestxml);
-                    //инициализируем криптодвижок для расшифровки
-                    CspParameters cspParams = new CspParameters
-                    {
-                        ProviderType = 1
-                    };
-                    RSACryptoServiceProvider rsaProvider = new RSACryptoServiceProvider(cspParams);
+                    RSACryptoServiceProvider rsaProvider = null;
                     CryptoHelper ch = new CryptoHelper();
-                    rsaProvider.ImportCspBlob(ch.PrivateKey);
                     //расшифровываем запрос
-                    byte[] plaintextbytes = rsaProvider.Decrypt(tmpreq.AuthorizationString,false);
+                    byte[] plaintextbytes = ch.DecryptData(tmpreq.AuthorizationString);
                     byte[] tmphwidbytes = new byte[] { };
                     byte[] tmpuidbytes = new byte[] { };
                     //делим массив данных на две части, разделитель byte[3] { 254, 11, 254 }
