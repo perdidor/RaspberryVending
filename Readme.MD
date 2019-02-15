@@ -4,6 +4,7 @@
 - Raspberry Pi 3 + HDMI дисплей 800х480, ATTiny85, ATMEGA1284, монетоприемник: Currenza C2 Blue MDB, купюроприемник: ICT A7/V7 MDB, касса: "Казначей ФА" (https://казначей.онлайн/).
 - датчики: DS18B20 - 2 шт в герметичном корпусе, DHT22 - 1шт.
 - датчик уровня воды fyd-sr04 с выносным УЗ излучателем (алиэкспресс).
+- импульсный датчик потока жидкости DN20 flow meter 3/4 (алиэкспресс)
 - ОС и другое ПО: клиент - MS Windows IoT Core, сервер - MS Windows Server 2016 (IIS + ASP.Net + .Net 4.6.1), MS SQL Server 2012
 - Платформа и средства разработки: .NET Core c#, c++ @ Visual Studio 2017, Arduino IDE 1.8
 
