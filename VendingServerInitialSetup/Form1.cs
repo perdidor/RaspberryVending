@@ -5,6 +5,8 @@ using System.Text;
 using System.IO;
 using System.Windows.Forms;
 using TwoFactorAuthNet;
+using System.Threading.Tasks;
+using System.Net.Mail;
 using System.Security.Cryptography;
 
 namespace VendingServerInitialSetup
@@ -20,8 +22,21 @@ namespace VendingServerInitialSetup
             InitializeComponent();
         }
 
+        private bool _smtptestok = false;
+
+        private bool SMTPTestOK
+        {
+            get { return _smtptestok; }
+            set
+            {
+                wizardPage4.AllowNext = value;
+                _smtptestok = value;
+            }
+        }
+
         private void Form1_Load(object sender, EventArgs e)
         {
+            SMTPTestOK = false;
             DateTime dt = DateTime.Now;
             long cdt = Convert.ToInt64(dt.ToString("yyyyMMddHHmmss"));
             string cdtstr = dt.ToString("dd.MM.yyyy HH:mm:ss");
@@ -109,7 +124,7 @@ namespace VendingServerInitialSetup
                 tfa = new TwoFactorAuth("Vending control system");
                 if (otpsecret == "") otpsecret = tfa.CreateSecret(160);
                 var pic = Convert.FromBase64String(tfa.GetQrCodeImageAsDataUri(adminemailtextbox.Text, otpsecret, 150).Substring(22));
-                Image image = Image.FromStream(new System.IO.MemoryStream(pic));
+                Image image = Image.FromStream(new MemoryStream(pic));
                 otpsecretpicture.Image = image;
             }
         }
@@ -136,7 +151,8 @@ namespace VendingServerInitialSetup
 
         private void Page4_TextChanged(object sender, EventArgs e)
         {
-            wizardPage4.AllowNext = (fromemailtextbox.Text != "" && devregistersubjtextbox.Text != "" && userregistersubjtextbox.Text != "" && smtphosttextbox.Text != "" && smtpporttextbox.Text != "" && (!maillogincheckbox.Checked || (maillogincheckbox.Checked && smtpusernametextbox.Text != "" && smtppasswordtextbox.Text != "")));
+            SMTPTestOK = false;
+            testsmtpsettingsbutton.Enabled = (fromemailtextbox.Text != "" && devregistersubjtextbox.Text != "" && userregistersubjtextbox.Text != "" && smtphosttextbox.Text != "" && smtpporttextbox.Text != "" && (!maillogincheckbox.Checked || (maillogincheckbox.Checked && smtpusernametextbox.Text != "" && smtppasswordtextbox.Text != "")));
         }
 
         private void FinishWizard(object sender, AeroWizard.WizardPageConfirmEventArgs e)
@@ -304,6 +320,59 @@ namespace VendingServerInitialSetup
                 wizardPage2.AllowNext = false;
                 checkotpbutton.Enabled = true;
             }
+        }
+
+        private void maillogincheckbox_CheckedChanged(object sender, EventArgs e)
+        {
+            label13.Enabled = maillogincheckbox.Checked;
+            label14.Enabled = maillogincheckbox.Checked;
+            smtpusernametextbox.Enabled = maillogincheckbox.Checked;
+            smtppasswordtextbox.Enabled = maillogincheckbox.Checked;
+        }
+
+        private async void testsmtpsettingsbutton_Click(object sender, EventArgs e)
+        {
+            wizardPage4.Enabled = false;
+            Cursor.Current = Cursors.WaitCursor;
+            Exception ex = null;
+            await Task.Run(() =>
+            {
+                try
+                {
+                    MailMessage testmail = new MailMessage();
+                    testmail.To.Add(adminemailtextbox.Text);
+                    testmail.From = new MailAddress(fromemailtextbox.Text, sendernametextbox.Text, Encoding.UTF8);
+                    testmail.Subject = "Тестовое сообщение";
+                    testmail.SubjectEncoding = Encoding.UTF8;
+                    testmail.Body = "Добрый день, уважаемый\\ая сэр\\мадам.<br> Это тестовое сообщение для проверки корректности настроек SMTP-клиента.";
+                    testmail.BodyEncoding = Encoding.UTF8;
+                    testmail.IsBodyHtml = true;
+                    testmail.Priority = MailPriority.High;
+                    SmtpClient client = new SmtpClient
+                    {
+                        UseDefaultCredentials = !maillogincheckbox.Checked,
+                        Port = Convert.ToInt32(smtpporttextbox.Text),
+                        Host = smtphosttextbox.Text,
+                        EnableSsl = smtpusesslcheckbox.Checked,
+                    };
+                    if (!client.UseDefaultCredentials) client.Credentials = new System.Net.NetworkCredential(smtpusernametextbox.Text, smtppasswordtextbox.Text);
+                    client.Send(testmail);
+                    SMTPTestOK = true;
+                }
+                catch (Exception exx)
+                {
+                    ex = exx;
+                }
+            });
+            if (SMTPTestOK)
+            {
+                MessageBox.Show("SMTP test passed OK, check your inbox at " + adminemailtextbox.Text, "Information", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            } else
+            {
+                MessageBox.Show("SMTP test FAILED with error:" + Environment.NewLine + ex?.Message + Environment.NewLine + ex?.InnerException?.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+            Cursor.Current = Cursors.AppStarting;
+            wizardPage4.Enabled = true;
         }
     }
 }

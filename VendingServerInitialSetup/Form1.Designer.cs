@@ -53,6 +53,7 @@
             this.sitenametextbox = new System.Windows.Forms.TextBox();
             this.label4 = new System.Windows.Forms.Label();
             this.wizardPage4 = new AeroWizard.WizardPage();
+            this.testsmtpsettingsbutton = new System.Windows.Forms.Button();
             this.smtppasswordtextbox = new System.Windows.Forms.TextBox();
             this.label14 = new System.Windows.Forms.Label();
             this.maillogincheckbox = new System.Windows.Forms.CheckBox();
@@ -304,6 +305,8 @@
             // 
             // wizardPage4
             // 
+            this.wizardPage4.AllowNext = false;
+            this.wizardPage4.Controls.Add(this.testsmtpsettingsbutton);
             this.wizardPage4.Controls.Add(this.smtppasswordtextbox);
             this.wizardPage4.Controls.Add(this.label14);
             this.wizardPage4.Controls.Add(this.maillogincheckbox);
@@ -326,17 +329,29 @@
             this.wizardPage4.Text = "Step 4 of 4: SMTP settings";
             this.wizardPage4.Commit += new System.EventHandler<AeroWizard.WizardPageConfirmEventArgs>(this.FinishWizard);
             // 
+            // testsmtpsettingsbutton
+            // 
+            this.testsmtpsettingsbutton.Enabled = false;
+            this.testsmtpsettingsbutton.Location = new System.Drawing.Point(376, 127);
+            this.testsmtpsettingsbutton.Name = "testsmtpsettingsbutton";
+            this.testsmtpsettingsbutton.Size = new System.Drawing.Size(143, 23);
+            this.testsmtpsettingsbutton.TabIndex = 24;
+            this.testsmtpsettingsbutton.Text = "Test SMTP settings";
+            this.testsmtpsettingsbutton.UseVisualStyleBackColor = true;
+            this.testsmtpsettingsbutton.Click += new System.EventHandler(this.testsmtpsettingsbutton_Click);
+            // 
             // smtppasswordtextbox
             // 
-            this.smtppasswordtextbox.Location = new System.Drawing.Point(333, 161);
+            this.smtppasswordtextbox.Location = new System.Drawing.Point(215, 163);
             this.smtppasswordtextbox.Name = "smtppasswordtextbox";
-            this.smtppasswordtextbox.Size = new System.Drawing.Size(133, 23);
+            this.smtppasswordtextbox.Size = new System.Drawing.Size(131, 23);
             this.smtppasswordtextbox.TabIndex = 23;
+            this.smtppasswordtextbox.TextChanged += new System.EventHandler(this.Page4_TextChanged);
             // 
             // label14
             // 
             this.label14.AutoSize = true;
-            this.label14.Location = new System.Drawing.Point(264, 164);
+            this.label14.Location = new System.Drawing.Point(139, 166);
             this.label14.Name = "label14";
             this.label14.Size = new System.Drawing.Size(63, 15);
             this.label14.TabIndex = 22;
@@ -347,24 +362,26 @@
             this.maillogincheckbox.AutoSize = true;
             this.maillogincheckbox.Checked = true;
             this.maillogincheckbox.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.maillogincheckbox.Location = new System.Drawing.Point(93, 130);
+            this.maillogincheckbox.Location = new System.Drawing.Point(12, 165);
             this.maillogincheckbox.Name = "maillogincheckbox";
             this.maillogincheckbox.Size = new System.Drawing.Size(92, 19);
             this.maillogincheckbox.TabIndex = 21;
             this.maillogincheckbox.Text = "SMTP AUTH";
             this.maillogincheckbox.UseVisualStyleBackColor = true;
+            this.maillogincheckbox.CheckedChanged += new System.EventHandler(this.maillogincheckbox_CheckedChanged);
             // 
             // smtpusernametextbox
             // 
-            this.smtpusernametextbox.Location = new System.Drawing.Point(85, 163);
+            this.smtpusernametextbox.Location = new System.Drawing.Point(215, 127);
             this.smtpusernametextbox.Name = "smtpusernametextbox";
             this.smtpusernametextbox.Size = new System.Drawing.Size(131, 23);
             this.smtpusernametextbox.TabIndex = 20;
+            this.smtpusernametextbox.TextChanged += new System.EventHandler(this.Page4_TextChanged);
             // 
             // label13
             // 
             this.label13.AutoSize = true;
-            this.label13.Location = new System.Drawing.Point(9, 164);
+            this.label13.Location = new System.Drawing.Point(139, 128);
             this.label13.Name = "label13";
             this.label13.Size = new System.Drawing.Size(66, 15);
             this.label13.TabIndex = 19;
@@ -375,7 +392,7 @@
             this.smtpusesslcheckbox.AutoSize = true;
             this.smtpusesslcheckbox.Checked = true;
             this.smtpusesslcheckbox.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.smtpusesslcheckbox.Location = new System.Drawing.Point(11, 130);
+            this.smtpusesslcheckbox.Location = new System.Drawing.Point(12, 129);
             this.smtpusesslcheckbox.Name = "smtpusesslcheckbox";
             this.smtpusesslcheckbox.Size = new System.Drawing.Size(66, 19);
             this.smtpusesslcheckbox.TabIndex = 18;
@@ -388,6 +405,7 @@
             this.smtpporttextbox.Name = "smtpporttextbox";
             this.smtpporttextbox.Size = new System.Drawing.Size(133, 23);
             this.smtpporttextbox.TabIndex = 17;
+            this.smtpporttextbox.TextChanged += new System.EventHandler(this.Page4_TextChanged);
             // 
             // label12
             // 
@@ -404,6 +422,7 @@
             this.smtphosttextbox.Name = "smtphosttextbox";
             this.smtphosttextbox.Size = new System.Drawing.Size(131, 23);
             this.smtphosttextbox.TabIndex = 15;
+            this.smtphosttextbox.TextChanged += new System.EventHandler(this.Page4_TextChanged);
             // 
             // label11
             // 
@@ -420,6 +439,7 @@
             this.userregistersubjtextbox.Name = "userregistersubjtextbox";
             this.userregistersubjtextbox.Size = new System.Drawing.Size(285, 23);
             this.userregistersubjtextbox.TabIndex = 13;
+            this.userregistersubjtextbox.TextChanged += new System.EventHandler(this.Page4_TextChanged);
             // 
             // label10
             // 
@@ -436,6 +456,7 @@
             this.devregistersubjtextbox.Name = "devregistersubjtextbox";
             this.devregistersubjtextbox.Size = new System.Drawing.Size(285, 23);
             this.devregistersubjtextbox.TabIndex = 11;
+            this.devregistersubjtextbox.TextChanged += new System.EventHandler(this.Page4_TextChanged);
             // 
             // label9
             // 
@@ -452,6 +473,7 @@
             this.fromemailtextbox.Name = "fromemailtextbox";
             this.fromemailtextbox.Size = new System.Drawing.Size(285, 23);
             this.fromemailtextbox.TabIndex = 9;
+            this.fromemailtextbox.TextChanged += new System.EventHandler(this.Page4_TextChanged);
             // 
             // label8
             // 
@@ -529,6 +551,7 @@
         private System.Windows.Forms.TextBox fromemailtextbox;
         private System.Windows.Forms.Label label8;
         private System.Windows.Forms.Button newotpsecretbutton;
+        private System.Windows.Forms.Button testsmtpsettingsbutton;
     }
 }
 
