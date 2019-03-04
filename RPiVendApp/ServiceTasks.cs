@@ -754,19 +754,17 @@ namespace RPiVendApp
                         //reverse arrays if source is not agree with LittleEndian
                         if (!BitConverter.IsLittleEndian)
                         {
-                            Array.Reverse(tmpaddr1, 0, tmpaddr1.Length);
-                            Array.Reverse(tmpaddr2, 0, tmpaddr2.Length);
                             Array.Reverse(tmptemp1, 0, tmptemp1.Length);
                             Array.Reverse(tmptemp2, 0, tmptemp2.Length);
                             Array.Reverse(tmpambtemp, 0, tmpambtemp.Length);
                             Array.Reverse(tmpambhum, 0, tmpambhum.Length);
                         }
-                        if (StructuralComparisons.StructuralEqualityComparer.Equals(tmpaddr1, StartPage.CurrentDeviceSettings.WaterTempSensorAddress))
+                        if (CompareArrays(tmpaddr1, StartPage.CurrentDeviceSettings.WaterTempSensorAddress))
                         {
                             StartPage.SystemState.WaterTempCelsius = BitConverter.ToSingle(tmptemp1, 0);
                             StartPage.SystemState.InboxTempCelsius = BitConverter.ToSingle(tmptemp2, 0);
                         }
-                        if (StructuralComparisons.StructuralEqualityComparer.Equals(tmpaddr2, StartPage.CurrentDeviceSettings.WaterTempSensorAddress))
+                        if (CompareArrays(tmpaddr2, StartPage.CurrentDeviceSettings.WaterTempSensorAddress))
                         {
                             StartPage.SystemState.WaterTempCelsius = BitConverter.ToSingle(tmptemp2, 0);
                             StartPage.SystemState.InboxTempCelsius = BitConverter.ToSingle(tmptemp1, 0);
@@ -816,6 +814,22 @@ namespace RPiVendApp
                 }
                 await Task.Delay(5000);
             }
+        }
+        
+        /// <summary>
+        /// Сравнивает два массива
+        /// </summary>
+        /// <param name="a"></param>
+        /// <param name="b"></param>
+        /// <returns></returns>
+        static bool CompareArrays(byte[] a, byte[] b)
+        {
+            if (a.Length != b.Length) { return false; }
+            for (int i = 0; i < a.Length; i++)
+            {
+                if (a[i] != b[i]) { return false; }
+            }
+            return true;
         }
 
         /// <summary>
