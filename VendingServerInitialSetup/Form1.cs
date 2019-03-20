@@ -6,6 +6,7 @@ using System.IO;
 using System.Windows.Forms;
 using TwoFactorAuthNet;
 using System.Threading.Tasks;
+using System.Security.AccessControl;
 using System.Net.Mail;
 using System.Security.Cryptography;
 
@@ -166,6 +167,10 @@ namespace VendingServerInitialSetup
                     string cdtstr = dt.ToString("dd.MM.yyyy HH:mm:ss");
                     SHA512 shaM = new SHA512Managed();
                     byte[] HashedPsssword = shaM.ComputeHash(Encoding.UTF8.GetBytes(adminpasstextbox.Text));
+                    if (!SetFolderPermission(@"C:\TempImageFiles"))
+                    {
+                        MessageBox.Show(@"Unable to create or set 'FULL ACCESS' permissions for user 'IIS AppPool\DefaultAppPool' on folder 'C:\TempImageFiles'. You have to set it manually or web charts will not work.", "Folder permissions", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    }
                     try
                     {
                         CspParameters cspParams = new CspParameters
@@ -328,6 +333,40 @@ namespace VendingServerInitialSetup
             label14.Enabled = maillogincheckbox.Checked;
             smtpusernametextbox.Enabled = maillogincheckbox.Checked;
             smtppasswordtextbox.Enabled = maillogincheckbox.Checked;
+        }
+
+        public bool SetFolderPermission(string folderPath)
+        {
+            try
+            {
+                if (!Directory.Exists(folderPath)) Directory.CreateDirectory(folderPath);
+                var directoryInfo = new DirectoryInfo(folderPath);
+                var directorySecurity = directoryInfo.GetAccessControl();
+                //если папка существует, удаляем существующие разрешения для пула IIS
+                foreach (FileSystemAccessRule item in directorySecurity.GetAuditRules(true, false, typeof(System.Security.Principal.NTAccount)))
+                {
+                    if (item.IdentityReference.Value == @"IIS AppPool\DefaultAppPool")
+                    {
+                        directorySecurity.RemoveAccessRule(item);
+                    }
+                }
+                //создаем новое правило доступа ФС
+                var fileSystemRule = new FileSystemAccessRule(@"IIS AppPool\DefaultAppPool",
+                                                              FileSystemRights.FullControl,
+                                                              InheritanceFlags.ObjectInherit |
+                                                              InheritanceFlags.ContainerInherit,
+                                                              PropagationFlags.InheritOnly,
+                                                              AccessControlType.Allow);
+
+                directorySecurity.AddAccessRule(fileSystemRule);
+                directoryInfo.SetAccessControl(directorySecurity);
+                return true;
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message + Environment.NewLine + ex.InnerException?.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            }
+            return false;
         }
 
         private async void testsmtpsettingsbutton_Click(object sender, EventArgs e)
