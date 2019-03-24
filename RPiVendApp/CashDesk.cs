@@ -279,7 +279,7 @@ namespace RPiVendApp
         public static byte[] IntToBcd2(bool isLittleEndian, string bcdString)
         {
             bool isValid = true;
-            isValid = isValid && !String.IsNullOrEmpty(bcdString);
+            isValid = isValid && !string.IsNullOrEmpty(bcdString);
             // Check that the string is made up of sets of two numbers (e.g. "01" or "3456")
             isValid = isValid && Regex.IsMatch(bcdString, "^([0-9]{2})+$");
             byte[] bytes;
@@ -309,7 +309,7 @@ namespace RPiVendApp
             }
             else
             {
-                throw new ArgumentException(String.Format(
+                throw new ArgumentException(string.Format(
                     "Input string ({0}) was invalid.", bcdString));
             }
             return bytes;
@@ -320,14 +320,14 @@ namespace RPiVendApp
         /// </summary>
         /// <param name="BCDBytes"></param>
         /// <returns></returns>
-        public static UInt64 BCDByteToInt(byte[] BCDBytes)
+        public static ulong BCDByteToInt(byte[] BCDBytes)
         {
-            UInt64 res = 0;
+            ulong res = 0;
             for (int i = 0; i < BCDBytes.Length; i++)
             {
                 res *= 100;
-                res += (UInt64)(10 * (BCDBytes[i] >> 4));
-                res += (UInt64)(BCDBytes[i] & 0xf);
+                res += (ulong)(10 * (BCDBytes[i] >> 4));
+                res += (ulong)(BCDBytes[i] & 0xf);
             }
             return res;
         }
@@ -2395,8 +2395,8 @@ namespace RPiVendApp
 #pragma warning restore CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
                     while (true)
                     {
-                        Task<UInt32> loadAsyncTask = CashDeskSerialDataReaderObject.LoadAsync(64).AsTask(StartPage.GlobalCancellationTokenSource.Token);
-                        UInt32 bytesRead = 0;
+                        Task<uint> loadAsyncTask = CashDeskSerialDataReaderObject.LoadAsync(64).AsTask(StartPage.GlobalCancellationTokenSource.Token);
+                        uint bytesRead = 0;
                         bytesRead = await loadAsyncTask;
                         if (bytesRead > 0)
                         {

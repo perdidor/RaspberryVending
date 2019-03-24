@@ -1,9 +1,10 @@
 ﻿using System;
+using System.Diagnostics;
 using Windows.UI;
 using Windows.Devices.Enumeration;
 using Windows.Devices.SerialCommunication;
-using System.Globalization;
 using System.Threading;
+using System.Linq;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Windows.Storage.Streams;
@@ -11,9 +12,13 @@ using System.Text;
 
 namespace RPiVendApp
 {
+    /// <summary>
+    /// Класс для работы с шиной MDB через адаптер
+    /// </summary>
     public class MDB
     {
         public delegate void MDBStartedDelegate();
+        public delegate void MDBCoinsDispensedManuallyDelegate(double CoinValue, int CoinsDispensed, int CoinsLeft);
         public delegate void MDBChangerPayOutBusydDelegate();
         public delegate void MDBBAResetedDelegate();
         public delegate void MDBCCResetedDelegate();
@@ -24,6 +29,7 @@ namespace RPiVendApp
         public delegate void MDBDataProcessingErrorDelegate(string DataProcessingErrorMessage);
         public delegate void MDBChangeDispensedDelegate(int DispensedSum);
         public delegate void MDBCCTubesStatusDelegate(int RUR1, int RUR2, int RUR5, int RUR10);
+        public delegate void MDBBAStackerStatusDelegate(bool StackerFull, int StackerBillsCount);
         public delegate void MDBInformationMessageReceivedDelegate(string MDBInformationMessage);
 
         public static MDB MDBInstance = null;
@@ -33,26 +39,106 @@ namespace RPiVendApp
         private static bool baalreadydisabled = false;
         private static bool CheckBAStatus = false;
         private static bool CheckCCTubeStatus = false;
+        private static bool GetCCSettings = false;
+        private static bool GetBASettings = false;
+        private static byte AwaitingMDBAnswerFrom = 0x00;
         private static DataReader MDBSerialDataReaderObject = null;
         public static bool DispenseInProgress = false;
         public static bool CheckDispenseResult = false;
         public static DateTime Dispensetimeout = new DateTime();
 
+        /// <summary>
+        /// Адаптер MDB-RS232 стартанул
+        /// </summary>
         public static event MDBStartedDelegate MDBStarted;
+        /// <summary>
+        /// Монеты выданы вручную
+        /// </summary>
+        public static event MDBCoinsDispensedManuallyDelegate MDBCoinsDispensedManually;
+        /// <summary>
+        /// Купюра вставлена
+        /// </summary>
         public static event MDBInsertedBillDelegate MDBInsertedBill;
+        /// <summary>
+        /// Ошибка при работе с шиной MDB
+        /// </summary>
         public static event MDBErrorDelegate MDBError;
+        /// <summary>
+        /// Ошибка при обработке данных
+        /// </summary>
         public static event MDBDataProcessingErrorDelegate MDBDataProcessingError;
+        /// <summary>
+        /// Монета упала в кешбокс
+        /// </summary>
         public static event MDBInsertedCoinRoutedToCashBoxDelegate MDBInsertedCoinRoutedToCashBox;
+        /// <summary>
+        /// Монета упала в трубку
+        /// </summary>
         public static event MDBInsertedCoinRoutedToCCTubeDelegate MDBInsertedCoinRoutedToCCTube;
+        /// <summary>
+        /// Выдана сдача
+        /// </summary>
         public static event MDBChangeDispensedDelegate MDBChangeDispensed;
+        /// <summary>
+        /// Статус заполнения монетоприемника
+        /// </summary>
         public static event MDBCCTubesStatusDelegate MDBCCTubesStatus;
+        /// <summary>
+        /// Статус заполнения стекера купюроприемника
+        /// </summary>
+        public static event MDBBAStackerStatusDelegate MDBBAStackerStatus;
+        /// <summary>
+        /// Информационное сообщение
+        /// </summary>
         public static event MDBInformationMessageReceivedDelegate MDBInformationMessageReceived;
+        /// <summary>
+        /// Купюроприемник выполнил команду сброс
+        /// </summary>
         public static event MDBBAResetedDelegate MDBBAReseted;
+        /// <summary>
+        /// Монетоприемник выполнил команду сброс
+        /// </summary>
         public static event MDBCCResetedDelegate MDBCCReseted;
+        /// <summary>
+        /// Монетоприемник занят вдачей сдачи
+        /// </summary>
         public static event MDBChangerPayOutBusydDelegate MDBCCPayOutBusy;
-
+        /// <summary>
+        /// флаг доступа к исходящим командам
+        /// </summary>
         private static SemaphoreSlim MDBCommandsListSemaphore = new SemaphoreSlim(0, 1);
+        /// <summary>
+        /// флаг доступа к адресу устройства, от которого ожидается ответ
+        /// </summary>
+        private static SemaphoreSlim MDBAbswerFromByteSemaphore = new SemaphoreSlim(0, 1);
 
+        /// <summary>
+        /// структура настроек монетоприемника
+        /// </summary>
+        public static class CoinChangerSetupData
+        {
+            public static int ChangerFeatureLevel = 0;
+            public static int CountryOrCurrencyCode = 0;
+            public static int CoinScalingFactor = 1;
+            public static int DecimalPlaces = 0;
+            public static bool[] CoinsRouteable = new bool[16];
+            public static int[] CoinTypeCredit = new int[16];
+        }
+
+        /// <summary>
+        /// структура настроек купюроприемника
+        /// </summary>
+        public static class BillValidatorSetupData
+        {
+            public static int BillValidatorFeatureLevel = 0;
+            public static int CountryOrCurrencyCode = 0;
+            public static int BillScalingFactor = 1;
+            public static int DecimalPlaces = 0;
+            public static int StackerCapacity = 0;
+            public static bool[] BillSecurityLevel = new bool[16];
+            public static bool Escrow = false;
+            public static int[] BillTypeCredit = new int[16];
+        }
 
         /// <summary>
         /// Инициализирует последовательный порт шины MDB
@@ -119,8 +205,8 @@ namespace RPiVendApp
                     List<byte> tmpres = new List<byte> { };
                     while (true)
                     {
-                        Task<UInt32> loadAsyncTask = MDBSerialDataReaderObject.LoadAsync(64).AsTask(StartPage.GlobalCancellationTokenSource.Token);
-                        UInt32 bytesRead = 0;
+                        Task<uint> loadAsyncTask = MDBSerialDataReaderObject.LoadAsync(64).AsTask(StartPage.GlobalCancellationTokenSource.Token);
+                        uint bytesRead = 0;
                         bytesRead = await loadAsyncTask;
                         if (bytesRead > 0)
                         {
@@ -128,11 +214,9 @@ namespace RPiVendApp
                             MDBSerialDataReaderObject.ReadBytes(tmpbyte);
                             for (int i = 0; i < tmpbyte.Length; i++)
                             {
-                                if ((tmpbyte[i] == '\n')/* || (tmpbyte[tmpbyte.Length - 1] == 10)*/)
+                                if ((tmpbyte[i] == '\n'))
                                 {
                                     byte[] b = tmpres.ToArray();
-                                    //Task.Factory.StartNew(() => { ProcessIncomingMDB(b); });
-                                    //ProcessIncomingMDB(b);
 #pragma warning disable CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
                                     Task.Run(() =>
                                     {
@@ -149,9 +233,8 @@ namespace RPiVendApp
                                             }
                                         }
                                         string tmpstr = Encoding.UTF8.GetString(b).Trim();
-                                        if (tmpstr == "00 00 00") return;
                                         tmpstr = tmpstr.Replace("\r", "");
-                                        CurrenzaC2Green_ICTA7V7_DataProcess(tmpstr);
+                                        MDBIncomingDataProcess(tmpstr);
                                         mut.ReleaseMutex();
                                         mut.Dispose();
                                     });
@@ -163,8 +246,6 @@ namespace RPiVendApp
                                     tmpres.Add(tmpbyte[i]);
                                 }
                             }
-                            //CollectMDBData(tmpbyte);
-                            //Task.Factory.StartNew(() => { CollectMDBData(tmpbyte); });
                         }
                     }
                 }
@@ -214,6 +295,9 @@ namespace RPiVendApp
             if (StartPage.UserDeposit == 0) CheckDispenseResult = true;
         }
 
+        /// <summary>
+        /// отслеживает выдачу сдачи
+        /// </summary>
         public static Task DispensedCoinsInfoTask()
         {
             Task.Delay(1000).Wait();
@@ -244,108 +328,135 @@ namespace RPiVendApp
         }
 
         /// <summary>
-        /// Defines command set to control MDB cash devices
-        /// </summary>
-        public static MDBCommands CommandSet = MDBCommandSets.CurrenzaC2Blue_ICTA7V7;
-
-        /// <summary>
         /// Currenza C2 Green coin changer and ICT A7/V7 bill validator data processing method.
         /// Must fire all MDB events, all events must be handled externally as well.
         /// </summary>
-        /// <param name="dt">String representation if incoming MDB serial data</param>
+        /// <param name="MDBStringData">String representation if incoming MDB serial data</param>
         /// <returns>none</returns>
-        public static void CurrenzaC2Green_ICTA7V7_DataProcess(string dt)
+        public static void MDBIncomingDataProcess(string MDBStringData)
         {
             string tmpmdbmsg = "";
-            if (dt.Length >= 500)
+            if (MDBStringData.Length >= 120)
             {
-                MDBInformationMessageReceived?.Invoke("Слишком большой пакет (>512 байт)");
+                MDBInformationMessageReceived?.Invoke("Слишком большой пакет (>40 байт)");
                 return;
             }
-            string ResponseData = "";
+            byte[] ResponseData = new byte[] { };
             try
             {
-                ResponseData = dt;
-                if ((ResponseData == "00") || (ResponseData == "FF"))
-                {
-                    //m2.ReleaseMutex();
-                    return;
-                }
-                if (ResponseData == "MDB-UART PLC ready") //MDB-UART adapter PLC started
+                if (MDBStringData == "MDB-UART PLC ready") //MDB-UART adapter PLC started
                 {
                     MDBStarted?.Invoke();
-                    //m2.ReleaseMutex();
+                    return;
+                }
+                MDBStringData = MDBStringData.Replace(" ","");
+                ResponseData = Enumerable.Range(0, MDBStringData.Length)
+                     .Where(x => x % 2 == 0)
+                     .Select(x => Convert.ToByte(MDBStringData.Substring(x, 2), 16))
+                     .ToArray();
+                if (ResponseData.Length == 2)//просто ACK от устройства, обрабатывать не надо
+                {
                     return;
                 }
             }
             catch
             {
                 MDBDataProcessingError?.Invoke("Ошибка при обработке данных MDB");
-                //m2.ReleaseMutex();
                 return;
             }
-            int mult = 0;
-            double CoinValue = 0;
-            if (ResponseData.StartsWith("30"))
+            MDBAbswerFromByteSemaphore.Wait();
+            if (ResponseData[0] == AwaitingMDBAnswerFrom)
+            {
+                AwaitingMDBAnswerFrom = 0x00;
+            }
+            MDBAbswerFromByteSemaphore.Release();
+            if (ResponseData[0] == 0x30)//данные от купюроприемника
             {
                 try
                 {
-                    string data = ResponseData.Substring(3);
-                    if (data == "81 09")
+                    if ((GetBASettings) && (ResponseData.Length == 29))//Ожидаем настройки, размер данных совпадает
                     {
-                        MDBInsertedBill?.Invoke(50.00);
+                        GetBASettings = false;
+                        BillValidatorSetupData.BillValidatorFeatureLevel = ResponseData[1];
+                        BillValidatorSetupData.CountryOrCurrencyCode = BCDByteToInt(new byte[2] { ResponseData[2], ResponseData[3] });
+                        BillValidatorSetupData.BillScalingFactor = ResponseData[4] << 8 | ResponseData[5];
+                        BillValidatorSetupData.DecimalPlaces = ResponseData[6];
+                        BillValidatorSetupData.StackerCapacity = ResponseData[7] << 8 | ResponseData[8];
+                        var tmpcr = new System.Collections.BitArray(ResponseData[9] << 8 | ResponseData[10]);
+                        for (int i = 0; i < tmpcr.Length; i++)
+                        {
+                            BillValidatorSetupData.BillSecurityLevel[i] = tmpcr[i];
+                        }
+                        BillValidatorSetupData.Escrow = ((ResponseData[11] & 0xff) == 1);
+                        for (int i = 12; i < ResponseData.Length - 1; i++)
+                        {
+                            BillValidatorSetupData.BillTypeCredit[i - 12] = ResponseData[i];
+                        }
+                        return;
                     }
-                    if (data == "82 09")
+                    if (CheckBAStatus && (ResponseData.Length == 4))//Ожидаем статус, размер данных совпадает
                     {
-                        MDBInsertedBill?.Invoke(100.00);
+                        CheckBAStatus = false;
+                        bool isstackerfull = ((ResponseData[1] & 0x80) == 1);
+                        int stackerbillscount = (ResponseData[7] << 8 | ResponseData[8]) & 0x0FFF;
+                        MDBBAStackerStatus?.Invoke(isstackerfull, stackerbillscount);
+                        return;
                     }
-                    if ((data == "01") || (data == "01 09"))
+                    switch (ResponseData[1] & 0x80)
                     {
-                        MDBError?.Invoke("Ошибка двигателя купюроприемника");
-                    }
-                    if ((data == "02") || (data == "02 09"))
-                    {
-                        MDBError?.Invoke("Ошибка датчика купюроприемника");
-                    }
-                    if ((data == "03") || (data == "03 09"))
-                    {
-                        MDBError?.Invoke("Валидатор занят обработкой данных");
-                    }
-                    if ((data == "04") || (data == "04 09"))
-                    {
-                        MDBError?.Invoke("Ошибка микропрограммы купюроприемника");
-                    }
-                    if ((data == "05") || (data == "05 09"))
-                    {
-                        MDBError?.Invoke("Замятие в купюроприемнике");
-                    }
-                    if ((data == "06") || (data == "06 09"))
-                    {
-                        MDBBAReseted?.Invoke();
-                    }
-                    if ((data == "07") || (data == "07 09"))
-                    {
-                        tmpmdbmsg = "BA Bill Removed";
-                    }
-                    if ((data == "08") || (data == "08 09"))
-                    {
-                        tmpmdbmsg = "BA Cash Box Out of Position";
-                    }
-                    if ((data == "09"))
-                    {
-                        tmpmdbmsg = "BA Unit Disabled";
-                    }
-                    if ((data == "0A") || (data == "0A 09"))
-                    {
-                        tmpmdbmsg = "BA Invalid Escrow Request";
-                    }
-                    if ((data == "0B") || (data == "0B 09"))
-                    {
-                        tmpmdbmsg = "BA Bill Rejected";
-                    }
-                    if ((data == "14") || (data == "14 09"))
-                    {
-                        tmpmdbmsg = "BA Bill Not Recognized";
+                        case 1://принята купюра
+                            int route = ResponseData[1] & 0x70;
+                            double value = Math.Round(BillValidatorSetupData.BillScalingFactor * BillValidatorSetupData.BillTypeCredit[ResponseData[1] & 0x0F] * (1 / Math.Pow(10, BillValidatorSetupData.DecimalPlaces)), 2);
+                            MDBInsertedBill?.Invoke(value);
+                            return;
+                        case 0://сообщение статуса
+                            if ((ResponseData[1] & 0x40) == 0)// ошибка
+                                switch (ResponseData[1] & 0x7F)
+                                {
+                                    case 1:
+                                        MDBError?.Invoke("Ошибка двигателя купюроприемника");
+                                        return;
+                                    case 2:
+                                        MDBError?.Invoke("Ошибка датчика купюроприемника");
+                                        return;
+                                    case 3:
+                                        MDBError?.Invoke("Валидатор занят обработкой данных");
+                                        return;
+                                    case 4:
+                                        MDBError?.Invoke("Ошибка микропрограммы купюроприемника");
+                                        return;
+                                    case 5:
+                                        MDBError?.Invoke("Замятие в купюроприемнике");
+                                        return;
+                                    case 6:
+                                        MDBBAReseted?.Invoke();
+                                        return;
+                                    case 7:
+                                        tmpmdbmsg = "BA Bill Removed";
+                                        break;
+                                    case 8:
+                                        tmpmdbmsg = "BA Cash Box Out of Position";
+                                        break;
+                                    case 9:
+                                        tmpmdbmsg = "BA Unit Disabled";
+                                        break;
+                                    case 10:
+                                        tmpmdbmsg = "BA Invalid Escrow Request";
+                                        break;
+                                    case 11:
+                                        tmpmdbmsg = "BA Bill Rejected";
+                                        break;
+                                    case 20:
+                                        tmpmdbmsg = "BA Bill Not Recognized";
+                                        break;
+                                    default:
+                                        break;
+                                } else//сообщение о попытках вставить купюру, пока купюроприемник был в нерабочем состоянии
+                            {
+                                MDBError?.Invoke(string.Format("Количество попыток вставить купюру в неактивном состоянии: {0}", ResponseData[1] & 0x1F));
+                                return;
+                            }
+                            break;
                     }
                 }
                 catch (Exception ex)
@@ -358,63 +469,92 @@ namespace RPiVendApp
                     {
                         MDBInformationMessageReceived?.Invoke(tmpmdbmsg);
                         if (tmpmdbmsg == "BA Unit Disabled") baalreadydisabled = true; else baalreadydisabled = false;
-                        //m2.ReleaseMutex();
                     }
                 }
                 return;
             }
-            if (ResponseData.StartsWith("08"))
+            if (ResponseData[0] == 0x08)//информация от монетоприемника
             {
                 try
                 {
-                    if (((int.Parse(ResponseData.Substring(3, 2), NumberStyles.HexNumber)) > 13) && !((int.Parse(ResponseData.Substring(3, 2), NumberStyles.HexNumber)) == 33))
+                    if ((GetCCSettings) && (ResponseData.Length >= 9) && (ResponseData.Length <= 25))//настройки
                     {
-                        int i = int.Parse(ResponseData.Substring(3).Substring(0, 2), NumberStyles.HexNumber);
-                        string FirstByte = Convert.ToString(i, 2).PadLeft(8,'0');
-                        if (FirstByte.Substring(4, 4) == "0000") CoinValue = 0.5;
-                        if (FirstByte.Substring(4, 4) == "0010") CoinValue = 1;
-                        if (FirstByte.Substring(4, 4) == "0011") CoinValue = 2;
-                        if (FirstByte.Substring(4, 4) == "0100") CoinValue = 5;
-                        if (FirstByte.Substring(4, 4) == "0110") CoinValue = 10;
-                        double dep = 0.00;
-                        if (FirstByte.Substring(2, 2) == "00")
+                        GetCCSettings = false;
+                        CoinChangerSetupData.ChangerFeatureLevel = ResponseData[1];
+                        CoinChangerSetupData.CountryOrCurrencyCode = BCDByteToInt(new byte[2] { ResponseData[2], ResponseData[3] } ) ;
+                        CoinChangerSetupData.CoinScalingFactor = ResponseData[4];
+                        CoinChangerSetupData.DecimalPlaces = ResponseData[5];
+                        var tmpcr = new System.Collections.BitArray(ResponseData[6] << 8 | ResponseData[7]);
+                        for (int i = 0; i < tmpcr.Length; i++)
                         {
-                            //"Кэшбокс";
-                            mult = 1;
-                            dep = (CoinValue * mult);
-                            MDBInsertedCoinRoutedToCashBox?.Invoke(dep);
-                            //m2.ReleaseMutex();
-                            return;
+                            CoinChangerSetupData.CoinsRouteable[i] = tmpcr[i];
                         }
-                        if (FirstByte.Substring(2, 2) == "01")
+                        for (int i = 8; i < ResponseData.Length - 1; i++)
                         {
-                            //"Трубка монетоприемника";
-                            mult = 1;
-                            dep = (CoinValue * mult);
-                            MDBInsertedCoinRoutedToCCTube?.Invoke(dep);
-                            //m2.ReleaseMutex();
-                            return;
+                            CoinChangerSetupData.CoinTypeCredit[i - 8] = ResponseData[i];
                         }
-                        if (FirstByte.Substring(2, 2) == "10")
+                        return;
+                    }
+                    if ((CheckDispenseResult) && (ResponseData.Length == 18))//информация о выданной сдаче
+                    {
+                        CheckDispenseResult = false;
+                        int i1 = ResponseData[2];
+                        int i2 = ResponseData[3];
+                        int i5 = ResponseData[4];
+                        int i10 = ResponseData[6];
+                        int TotalCoins = i1 + i2 + i5 + i10;
+                        int TotalDispensed = i1 + i2 * 2 + i5 * 5 + i10 * 10;
+                        MDBChangeDispensed?.Invoke(TotalDispensed);
+                        return;
+                    }
+                    if ((CheckCCTubeStatus) && (ResponseData.Length == 20))//информация о заполнении трубок
+                    {
+                        CheckCCTubeStatus = false;
+                        int i1 = ResponseData[5];
+                        int i2 = ResponseData[6];
+                        int i5 = ResponseData[7];
+                        int i10 = ResponseData[9];
+                        int TotalCoinsInTubesValue = i1 + i2 * 2 + i5 * 5 + i10 * 10;
+                        MDBCCTubesStatus?.Invoke(i1, i2, i5, i10);
+                        return;
+                    }
+                    if ((ResponseData[1] & 0x80) == 1)//информация о выданных вручную монетах
+                    {
+                        //Coins Dispensed Manually
+                        int CoinsQuantity = (ResponseData[1] & 0x70);//bits 5-7 of byte 1
+                        int CoinType = (ResponseData[1] & 0x0F);//bits 1-4 of byte 1
+                        int CoinsLeft = ResponseData[2];//byte 2
+                        MDBCoinsDispensedManually?.Invoke(Math.Round(CoinChangerSetupData.CoinScalingFactor * CoinChangerSetupData.CoinTypeCredit[CoinType] * (1 / Math.Pow(10, CoinChangerSetupData.DecimalPlaces)), 2), CoinsQuantity, CoinsLeft);
+                        return;
+                    }
+                    if ((ResponseData[1] & 0x40) == 1)//зааинута монета
+                    {
+                        //Coins deposited
+                        int CoinRouting = (ResponseData[1] & 0x30);//bits 5-6 of byte 1
+                        int CoinType = (ResponseData[1] & 0x0F);//bits 1-4 of byte 1
+                        int CoinsLeft = ResponseData[2];//byte 2
+                        switch (CoinRouting)
                         {
-                            //"Неизвестно";
-                            mult = 0;
-                        }
-                        if (FirstByte.Substring(2, 2) == "11")
-                        {
-                            //"Возврат";
-                            mult = 0;
+                            case 0://"Кэшбокс";
+                                MDBInsertedCoinRoutedToCashBox?.Invoke(Math.Round(CoinChangerSetupData.CoinScalingFactor * CoinChangerSetupData.CoinTypeCredit[CoinType] * (1 / Math.Pow(10, CoinChangerSetupData.DecimalPlaces)), 2));
+                                return;
+                            case 1://"Трубка монетоприемника";
+                                MDBInsertedCoinRoutedToCCTube?.Invoke(Math.Round(CoinChangerSetupData.CoinScalingFactor * CoinChangerSetupData.CoinTypeCredit[CoinType] * (1 / Math.Pow(10, CoinChangerSetupData.DecimalPlaces)), 2));
+                                return;
+                            case 3://Возврат
+                                MDBInformationMessageReceived?.Invoke("Монета нераспознана, возвращена");
+                                return;
+                            default://неизвестно
+                                MDBInformationMessageReceived?.Invoke("Какая-то неведомая хуйня с монетой");
+                                return;
                         }
                     }
-                    else
+                    switch (ResponseData[1])//ошибка
                     {
-                        string data = ResponseData.Substring(3, 2);
-                        if ((data == "01"))
-                        {
+                        case 1:
                             tmpmdbmsg = "CC Escrow Request";
-                        }
-                        if ((data == "02"))
-                        {
+                            break;
+                        case 2:
                             tmpmdbmsg = "CC Changer Payout Busy";
                             Dispensetimeout = DateTime.Now.AddSeconds(3);
                             MDBCCPayOutBusy?.Invoke();
@@ -422,53 +562,39 @@ namespace RPiVendApp
                             {
                                 CurrenzaC2Green_DispenseWatch();
                             }
-                            //m2.ReleaseMutex();
                             return;
-                        }
-                        if ((data == "03"))
-                        {
+                        case 3:
                             tmpmdbmsg = "CC No Credit";
-                        }
-                        if ((data == "04"))
-                        {
+                            break;
+                        case 4:
                             MDBError?.Invoke("Ошибка датчика в трубе монетоприемника");
-                        }
-                        if ((data == "05"))
-                        {
+                            return;
+                        case 5:
                             tmpmdbmsg = "CC Double Arrival";
-                        }
-                        if ((data == "06"))
-                        {
+                            break;
+                        case 6:
                             MDBError?.Invoke("Монетоприемник открыт");
-                        }
-                        if ((data == "07"))
-                        {
+                            return;
+                        case 7:
                             MDBError?.Invoke("Застревание монеты в трубе монетоприемника при выдаче сдачи");
-                        }
-                        if ((data == "08"))
-                        {
+                            return;
+                       case 8:
                             MDBError?.Invoke("Ошибка микропрограммы монетоприемника");
-                        }
-                        if ((data == "09"))
-                        {
+                            return;
+                        case 9:
                             MDBError?.Invoke("Ошибка направляющих механизмов монетоприемника");
-                        }
-                        if ((data == "0A"))
-                        {
+                            return;
+                        case 10:
                             tmpmdbmsg = "CC Changer Busy";
-                        }
-                        if ((data == "0B"))
-                        {
+                            break;
+                        case 11:
                             MDBCCReseted?.Invoke();
-                        }
-                        if ((data == "0C"))
-                        {
+                            return;
+                        case 12:
                             MDBError?.Invoke("Застревание монеты");
-                        }
-                        if ((data == "21"))
-                        {
-                            tmpmdbmsg = "Монета не распознана, возвращена";
-                        }
+                            return;
+                        default:
+                            break;
                     }
                 }
                 catch (Exception ex)
@@ -480,47 +606,25 @@ namespace RPiVendApp
                     MDBInformationMessageReceived?.Invoke(tmpmdbmsg);
                     baalreadydisabled = false;
                 }
-                //m2.ReleaseMutex();
                 return;
             }
-            if ((CheckDispenseResult) && (ResponseData.Length == 47))
+        }
+
+        /// <summary>
+        /// Преобразует массив байт BCD в целое число
+        /// </summary>
+        /// <param name="BCDBytes"></param>
+        /// <returns></returns>
+        public static int BCDByteToInt(byte[] BCDBytes)
+        {
+            int res = 0;
+            for (int i = 0; i < BCDBytes.Length; i++)
             {
-                string[] bytes = ResponseData.Split(' ');
-                int i1 = int.Parse(bytes[2], NumberStyles.HexNumber);
-                int i2 = int.Parse(bytes[3], NumberStyles.HexNumber);
-                int i5 = int.Parse(bytes[4], NumberStyles.HexNumber);
-                int i10 = int.Parse(bytes[6], NumberStyles.HexNumber);
-                int TotalCoins = int.Parse(bytes[bytes.Length - 1], NumberStyles.HexNumber);
-                int TotalDispensed = i1 + i2 * 2 + i5 * 5 + i10 * 10;
-                CheckDispenseResult = false;
-                MDBChangeDispensed?.Invoke(TotalDispensed);
-                //m2.ReleaseMutex();
-                return;
+                res *= 100;
+                res += (10 * (BCDBytes[i] >> 4));
+                res += (BCDBytes[i] & 0xf);
             }
-            if ((CheckCCTubeStatus) && (ResponseData.Length == 56))
-            {
-                CheckCCTubeStatus = false;
-                string[] bytes = ResponseData.Substring(7).Split(' ');
-                int i1 = int.Parse(bytes[2], NumberStyles.HexNumber);
-                int i2 = int.Parse(bytes[3], NumberStyles.HexNumber);
-                int i5 = int.Parse(bytes[4], NumberStyles.HexNumber);
-                int i10 = int.Parse(bytes[6], NumberStyles.HexNumber);
-                int TotalCoinsInTubesValue = i1 + i2 * 2 + i5 * 5 + i10 * 10;
-                MDBCCTubesStatus?.Invoke(i1, i2, i5, i10);
-                //m2.ReleaseMutex();
-                return;
-            }
-            if ((CheckBAStatus) && (ResponseData.Length == 8))
-            {
-                int i = int.Parse(ResponseData.Substring(1, 1) + ResponseData.Substring(3, 2), NumberStyles.HexNumber);
-                string AnswerBytes = Convert.ToString(i, 2).PadLeft(16, '0');
-                bool isstackerfull = (AnswerBytes.StartsWith("1"));
-                int stackerbillscount = Convert.ToInt32(AnswerBytes.Substring(1), 2);
-                //Here must be invoke to MDBBAStatus, but we will handle bills count manually on server side
-                CheckBAStatus = false;
-                //m2.ReleaseMutex();
-                return;
-            }
+            return res;
         }
 
         /// <summary>
@@ -528,7 +632,25 @@ namespace RPiVendApp
         /// </summary>
         public static void ReturnBill()
         {
-            AddCommand(CommandSet.ReturnBill);
+            AddCommand(MDBCommands.ReturnBill);
+        }
+
+        /// <summary>
+        /// запрос настроек валидатора
+        /// </summary>
+        public static void GetBillValidatorSettings()
+        {
+            GetBASettings = true;
+            AddCommand(MDBCommands.BillValidatorSetup);
+        }
+
+        /// <summary>
+        /// запрос настроек монетоприемника
+        /// </summary>
+        public static void GetChangerSettings()
+        {
+            GetCCSettings = true;
+            AddCommand(MDBCommands.ChangerSetup);
         }
 
         /// <summary>
@@ -537,9 +659,8 @@ namespace RPiVendApp
         /// <param name="PayOutSum"></param>
         public static void PayoutCoins(int PayOutSum)
         {
-            byte[] payouttmpcmd = MDBCommandSets.CurrenzaC2Green_PayoutCoins(PayOutSum);
+            byte[] payouttmpcmd = MDBCommands.PayoutCoins(PayOutSum);
             AddCommand(payouttmpcmd);
-            //MDBInstance.AddCommand(new byte[3] { 0x0f, 0x02, 0xFE});
         }
 
         /// <summary>
@@ -547,11 +668,11 @@ namespace RPiVendApp
         /// </summary>
         public static void GetDispensedInfo()
         {
-            AddCommand(CommandSet.GetDispensedCoinsInfo);
+            AddCommand(MDBCommands.GetDispensedCoinsInfo);
         }
 
         /// <summary>
-        /// Отсылает команды на шину MDB
+        /// Отсылает команды на шину MDB в "как бы полудуплексном" режиме
         /// </summary>
         /// <returns></returns>
         public static async Task SendCommandTask()
@@ -565,31 +686,43 @@ namespace RPiVendApp
                     {
                         foreach (var cmd in CommandList)
                         {
-                            DataWriter MDBSerialDataWriteObject = new DataWriter(MDBSerialPort.OutputStream);
-                            MDBSerialDataWriteObject.WriteBytes(cmd);
-                            await MDBSerialDataWriteObject.StoreAsync();
-                            StringBuilder hex = new StringBuilder();
-                            //foreach (byte b in cmd) hex.AppendFormat("{0:x2} ", b);
-                            //StartPage.AddItemToLogBox("Запись в порт MDB: " + hex.ToString());
-                            if (MDBSerialDataWriteObject != null)
+                            using (DataWriter MDBSerialDataWriteObject = new DataWriter(MDBSerialPort.OutputStream))
                             {
-                                MDBSerialDataWriteObject.DetachStream();
-                                MDBSerialDataWriteObject = null;
+                                var dw = new Stopwatch();
+                                dw.Start();//запускаем секундомер
+                                MDBAbswerFromByteSemaphore.Wait();//ждем освобождения переменной
+                                AwaitingMDBAnswerFrom = cmd[0];//присваиваем значение адреса
+                                MDBSerialDataWriteObject.WriteBytes(cmd);
+                                await MDBSerialDataWriteObject.StoreAsync();//пишем в порт
+                                MDBAbswerFromByteSemaphore.Release();//освобождаем переменную
+                                while (dw.ElapsedMilliseconds < 500)//ждем ответа от устройства 0.5с...
+                                {
+                                    await Task.Delay(50);
+                                    byte tmpbyte;
+                                    MDBAbswerFromByteSemaphore.Wait();
+                                    tmpbyte = AwaitingMDBAnswerFrom;
+                                    MDBAbswerFromByteSemaphore.Release();
+                                    if (tmpbyte != 0x00) break;//...либо если ответ пришел
+                                }
+                                dw.Stop();
+                                MDBAbswerFromByteSemaphore.Wait();//ждем освобождения переменной
+                                AwaitingMDBAnswerFrom = 0x00;
+                                MDBAbswerFromByteSemaphore.Release();//освобождаем переменную
+                                MDBSerialDataWriteObject?.DetachStream();
                             }
-                            await Task.Delay(500);
                         }
                         CommandList.Clear();
+                        MDBCommandsListSemaphore.Release();
                     }
-                    catch /*(Exception ex)*/
+                    catch (Exception ex)
                     {
-                        //StartPage.AddItemToLogBox("Ошибка записи в порт MDB: " + ex.Message);
+                        MDBError?.Invoke("Ошибка записи в порт MDB: " + ex.Message);
                     }
                     finally
                     {
 
                     }
                 }
-                MDBCommandsListSemaphore.Release();
                 await Task.Delay(500);
             }
         }
@@ -627,7 +760,7 @@ namespace RPiVendApp
         /// </summary>
         public static void DisableAcceptCoins()
         {
-            AddCommand(CommandSet.DisableAcceptCoins);//Configure to accept 0.5, 1, 2, 5 and 10 RUR coins
+            AddCommand(MDBCommands.DisableAcceptCoins);//Configure to accept 0.5, 1, 2, 5 and 10 RUR coins
         }
 
         /// <summary>
@@ -635,7 +768,7 @@ namespace RPiVendApp
         /// </summary>
         public static void DisableAcceptBills()
         {
-            AddCommand(CommandSet.DisableAcceptBills); //Configure Bill Validator to accept only 50 and 100 RUR bills
+            AddCommand(MDBCommands.DisableAcceptBills); //Configure Bill Validator to accept only 50 and 100 RUR bills
         }
 
         /// <summary>
@@ -643,7 +776,7 @@ namespace RPiVendApp
         /// </summary>
         public static void EnableAcceptCoins()
         {
-            AddCommand(CommandSet.EnableAcceptCoins);//Configure to accept 0.5, 1, 2, 5 and 10 RUR coins
+            AddCommand(MDBCommands.EnableAcceptCoins);//Configure to accept 0.5, 1, 2, 5 and 10 RUR coins
         }
 
         /// <summary>
@@ -651,7 +784,7 @@ namespace RPiVendApp
         /// </summary>
         public static void EnableDispenseCoins()
         {
-            AddCommand(CommandSet.EnableDispenseCoins);
+            AddCommand(MDBCommands.EnableDispenseCoins);
         }
 
         /// <summary>
@@ -659,7 +792,7 @@ namespace RPiVendApp
         /// </summary>
         public static void EnableCashDevices()
         {
-            AddCommand(new byte[][] { CommandSet.EnableAcceptCoins, CommandSet.EnableAcceptBills });
+            AddCommand(new byte[][] { MDBCommands.BillValidatorSetup, MDBCommands.ChangerSetup, MDBCommands.EnableAcceptCoins, MDBCommands.EnableAcceptBills });
         }
 
         /// <summary>
@@ -667,7 +800,7 @@ namespace RPiVendApp
         /// </summary>
         public static void DisableCashDevices()
         {
-            AddCommand(new byte[][] {  CommandSet.DisableAcceptCoins, CommandSet.DisableAcceptBills });
+            AddCommand(new byte[][] { MDBCommands.DisableAcceptCoins, MDBCommands.DisableAcceptBills });
         }
 
         /// <summary>
@@ -675,7 +808,7 @@ namespace RPiVendApp
         /// </summary>
         public static void EnableAcceptBills()
         {
-            AddCommand(CommandSet.EnableAcceptBills); //Configure Bill Validator to accept only 50 and 100 RUR bills
+            AddCommand(new byte[][] { MDBCommands.BillValidatorSetup, MDBCommands.EnableAcceptBills });
         }
 
         /// <summary>
@@ -683,7 +816,7 @@ namespace RPiVendApp
         /// </summary>
         public static void ResetCC()
         {
-            AddCommand(CommandSet.ResetCC);//Reset CC
+            AddCommand(MDBCommands.ResetCC);//Reset CC
         }
 
         /// <summary>
@@ -691,7 +824,7 @@ namespace RPiVendApp
         /// </summary>
         public static void ResetBA()
         {
-            AddCommand(CommandSet.ResetBA);//Reset Bill Validator
+            AddCommand(MDBCommands.ResetBA);//Reset Bill Validator
         }
 
         /// <summary>
@@ -699,7 +832,7 @@ namespace RPiVendApp
         /// </summary>
         public static void ResetCashDevices()
         {
-            AddCommand(new byte[][] { CommandSet.ResetBA, CommandSet.ResetCC } );//Reset Bill Validator
+            AddCommand(new byte[][] { MDBCommands.ResetBA, MDBCommands.ResetCC } );//Reset Bill Validator
         }
 
         /// <summary>
@@ -708,7 +841,7 @@ namespace RPiVendApp
         public static void GetBAStatus()
         {
             CheckBAStatus = true;
-            AddCommand(CommandSet.GetBAStatus); //Request Stacker Status
+            AddCommand(MDBCommands.GetBAStatus); //Request Stacker Status
         }
 
         /// <summary>
@@ -717,7 +850,33 @@ namespace RPiVendApp
         public static void GetCCStatus()
         {
             CheckCCTubeStatus = true;
-            AddCommand(CommandSet.GetCCStatus); //Request Stacker Status
+            AddCommand(MDBCommands.GetCCStatus); //Request Stacker Status
+        }
+
+        private static class MDBCommands
+        {
+            public static byte[] DisableAcceptBills = new byte[] { 0x34, 0x00, 0x00, 0x00, 0x00, 0x34 };
+            public static byte[] DisableAcceptCoins = new byte[] { 0x0C, 0x00, 0x00, 0x00, 0xFF, 0x0B };
+            public static byte[] DispenseCoinsInProgressMessage = new byte[] { 0x08, 0x02 };
+            public static byte[] EnableAcceptBills = new byte[] { 0x34, 0x00, 0x06, 0x00, 0x00, 0x3A };
+            public static byte[] EnableAcceptCoins = new byte[] { 0x0C, 0x00, 0xFF, 0x00, 0xFF, 0x0A };
+            public static byte[] EnableDispenseCoins = new byte[] { 0x0C, 0x00, 0x00, 0x00, 0xFF, 0x0B };
+            public static byte[] GetBAStatus = new byte[] { 0x36, 0x36 };
+            public static byte[] GetCCStatus = new byte[] { 0x0A, 0x0A };
+            public static byte[] GetDispensedCoinsInfo = new byte[] { 0x0F, 0x03, 0x12 };
+            public static byte[] ResetBA = new byte[] { 0x30, 0x30 };
+            public static byte[] ResetCC = new byte[] { 0x08, 0x08 };
+            public static byte[] ChangerSetup = new byte[] { 0x09, 0x09 };
+            public static byte[] BillValidatorSetup = new byte[] { 0x31, 0x31 };
+            public static byte[] ReturnBill = new byte[] { 0x35, 0x00, 0x35 };
+
+            public static byte[] PayoutCoins(int PayOutSum)
+            {
+                byte[] payouttmpcmd = new byte[4] { 0x0F, 0x02, 0x00, 0x00 };
+                payouttmpcmd[2] = (byte)(PayOutSum * 2 & 0xff);
+                payouttmpcmd[3] = (byte)((payouttmpcmd[0] + payouttmpcmd[1] + payouttmpcmd[2]) & 0xff);
+                return payouttmpcmd;
+            }
         }
     }
 }

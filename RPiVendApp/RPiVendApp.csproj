@@ -118,7 +118,6 @@
     <Compile Include="RegistrationPage.xaml.cs">
       <DependentUpon>RegistrationPage.xaml</DependentUpon>
     </Compile>
-    <Compile Include="MDBHardware.cs" />
     <Compile Include="GlobalVars.cs" />
     <Compile Include="MDB.cs" />
     <Compile Include="OutOfServicePage.xaml.cs">
