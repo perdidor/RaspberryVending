@@ -94,7 +94,7 @@ namespace RPiVendApp
                     {
                         _change = 127;
                     }
-                    MDB.Dispensetimeout = DateTime.Now.AddSeconds(10);
+                    MDB.DispenseTimeout = DateTime.Now.AddSeconds(10);
                     MDB.PayoutCoins(_change);//выдаем сдачу монетами
                     StartPage.UserDeposit -= _change;
                     Task.Delay(2000).Wait();

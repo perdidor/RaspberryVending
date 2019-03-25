@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Diagnostics;
-using Windows.UI;
 using Windows.Devices.Enumeration;
 using Windows.Devices.SerialCommunication;
 using System.Threading;
@@ -17,7 +16,7 @@ namespace RPiVendApp
     /// </summary>
     public class MDB
     {
-        public delegate void MDBStartedDelegate();
+        public delegate void MDBAdapterStartedDelegate();
         public delegate void MDBCoinsDispensedManuallyDelegate(double CoinValue, int CoinsDispensed, int CoinsLeft);
         public delegate void MDBChangerPayOutBusydDelegate();
         public delegate void MDBBAResetedDelegate();
@@ -26,31 +25,78 @@ namespace RPiVendApp
         public delegate void MDBInsertedCoinRoutedToCashBoxDelegate(double CoinValue);
         public delegate void MDBInsertedCoinRoutedToCCTubeDelegate(double CoinValue);
         public delegate void MDBErrorDelegate(string ErrorMessage);
+        public delegate void MDBDebugDelegate(string DebugMessage);
         public delegate void MDBDataProcessingErrorDelegate(string DataProcessingErrorMessage);
         public delegate void MDBChangeDispensedDelegate(int DispensedSum);
         public delegate void MDBCCTubesStatusDelegate(int RUR1, int RUR2, int RUR5, int RUR10);
         public delegate void MDBBAStackerStatusDelegate(bool StackerFull, int StackerBillsCount);
         public delegate void MDBInformationMessageReceivedDelegate(string MDBInformationMessage);
 
+        /// <summary>
+        /// аксессор для экземпляра класса
+        /// </summary>
         public static MDB MDBInstance = null;
+        /// <summary>
+        /// Последовательный порт адаптера
+        /// </summary>
         public static SerialDevice MDBSerialPort = null;
+        /// <summary>
+        /// Список исходящих команд
+        /// </summary>
         private static List<byte[]> CommandList = new List<byte[]> { };
-        public static int MDBInitStep = 0;
-        private static bool baalreadydisabled = false;
+        /// <summary>
+        /// флаг перехода купюроприемника в нерабочий
+        /// </summary>
+        private static bool BAAlreadyDisabled = false;
+        /// <summary>
+        /// Флаг ожидания сатуса купюроприемника
+        /// </summary>
         private static bool CheckBAStatus = false;
+        /// <summary>
+        /// Флаг ожидания статуса трубок монетоприемника
+        /// </summary>
         private static bool CheckCCTubeStatus = false;
+        /// <summary>
+        /// Флаг ожидания настроек монетоприемника
+        /// </summary>
         private static bool GetCCSettings = false;
+        /// <summary>
+        /// Флаг ожидания настроек купюроприемника
+        /// </summary>
         private static bool GetBASettings = false;
+        /// <summary>
+        /// Флаг отладочного режима
+        /// </summary>
+        private static bool DebugEnabled = false;
+        /// <summary>
+        /// Адрес устройства, от которого ожидается ответ
+        /// </summary>
         private static byte AwaitingMDBAnswerFrom = 0x00;
+        /// <summary>
+        /// DataReader
+        /// </summary>
         private static DataReader MDBSerialDataReaderObject = null;
+        /// <summary>
+        /// Флаг выдачи сдачи монетами в прогресе
+        /// </summary>
         public static bool DispenseInProgress = false;
+        /// <summary>
+        /// Флаг ожидания данных о выданной сдаче
+        /// </summary>
         public static bool CheckDispenseResult = false;
-        public static DateTime Dispensetimeout = new DateTime();
+        /// <summary>
+        /// Таймаут ожидания выдачи сдачи (обновляется при каждом получении информации о выдаче)
+        /// </summary>
+        public static DateTime DispenseTimeout = new DateTime();
 
         /// <summary>
         /// Адаптер MDB-RS232 стартанул
         /// </summary>
-        public static event MDBStartedDelegate MDBStarted;
+        public static event MDBAdapterStartedDelegate MDBAdapterStarted;
+        /// <summary>
+        /// В режиме отладки отсылаем сырые данные, которые пришли с адаптера
+        /// </summary>
+        public static event MDBDebugDelegate MDBDebug;
         /// <summary>
         /// Монеты выданы вручную
         /// </summary>
@@ -111,6 +157,10 @@ namespace RPiVendApp
         /// флаг доступа к адресу устройства, от которого ожидается ответ
         /// </summary>
         private static SemaphoreSlim MDBAbswerFromByteSemaphore = new SemaphoreSlim(0, 1);
+        /// <summary>
+        /// флаг доступа к обработчику ответов от устройств
+        /// </summary>
+        private static SemaphoreSlim MDBDataProcessSemaphore = new SemaphoreSlim(0, 1);
 
         /// <summary>
         /// структура настроек монетоприемника
@@ -141,63 +191,81 @@ namespace RPiVendApp
         }
 
         /// <summary>
-        /// Инициализирует последовательный порт шины MDB
+        /// Инициализирует последовательный порт для работы с адаптером (Исключая указанный порт)
         /// </summary>
-        /// <param name="cashdeskseroalportid">Исключить конкретный порт из поиска</param>
-        public static async void ConnectMDBSerialPort(string cashdeskseroalportid)
+        /// <param name="ExcludedSerialPortsList">Исключить конкретный порт из поиска</param>
+        public static async void InitWithSerialPortExclude(List<string> ExcludedSerialPortsList, CancellationToken token)
         {
             try
             {
-                MDBCommandsListSemaphore.Release();
-                StartPage.UpdateStartLEDs(StartPage.StartPageInstance.UART0LED, Colors.Yellow);
-                StartPage.UpdateProgress(5);
-                StartPage.AddItemToLogBox("Поиск последовательного порта шины MDB...");
+                MDBInformationMessageReceived?.Invoke("Поиск последовательного порта шины MDB...");
                 string aqs = SerialDevice.GetDeviceSelector();
                 var dis = await DeviceInformation.FindAllAsync(aqs);
                 foreach (var item in dis)
                 {
-                    if (item.Id != cashdeskseroalportid)
+                    if (!ExcludedSerialPortsList.Contains(item.Id))
                     {
                         MDBSerialPort = await SerialDevice.FromIdAsync(item.Id);
                     }
                 }
-                if (MDBSerialPort == null) return;
                 MDBSerialPort.WriteTimeout = TimeSpan.FromMilliseconds(1000);
                 MDBSerialPort.ReadTimeout = TimeSpan.FromMilliseconds(1000);
                 MDBSerialPort.BaudRate = 9600;
                 MDBSerialPort.Parity = SerialParity.None;
                 MDBSerialPort.StopBits = SerialStopBitCount.One;
                 MDBSerialPort.DataBits = 8;
-                string a = "Порт шины MDB успешно настроен: ";
-                a += MDBSerialPort.BaudRate + "-";
-                a += MDBSerialPort.DataBits + "-";
-                a += MDBSerialPort.Parity.ToString() + "-";
-                a += MDBSerialPort.StopBits;
-                StartPage.AddItemToLogBox(a);
-                ListenMDBSerialPort();
+                MDBInformationMessageReceived?.Invoke(string.Format("Порт шины MDB успешно настроен: {0}-{1}-{2}-{3}", MDBSerialPort.BaudRate, MDBSerialPort.DataBits, MDBSerialPort.Parity.ToString(), MDBSerialPort.StopBits));
+                ListenMDBSerialPort(token);
             }
             catch (Exception ex)
             {
-                StartPage.AddItemToLogBox(ex.Message);
+                MDBError?.Invoke(ex.Message);
+            }
+        }
+
+        /// <summary>
+        /// Инициализирует указанный последовательный порт для работы с адаптером
+        /// </summary>
+        /// <param name="SerialPort">последовательный порт</param>
+        public static async void InitWithSerialPortExact(string SerialPort, CancellationToken token)
+        {
+            try
+            {
+                MDBInformationMessageReceived?.Invoke("Поиск последовательного порта шины MDB...");
+                string aqs = SerialDevice.GetDeviceSelector();
+                var dis = await DeviceInformation.FindAllAsync(aqs);
+                foreach (var item in dis)
+                {
+                    if (SerialPort == item.Id)
+                    {
+                        MDBSerialPort = await SerialDevice.FromIdAsync(item.Id);
+                    }
+                }
+                MDBSerialPort.WriteTimeout = TimeSpan.FromMilliseconds(1000);
+                MDBSerialPort.ReadTimeout = TimeSpan.FromMilliseconds(1000);
+                MDBSerialPort.BaudRate = 9600;
+                MDBSerialPort.Parity = SerialParity.None;
+                MDBSerialPort.StopBits = SerialStopBitCount.One;
+                MDBSerialPort.DataBits = 8;
+                MDBInformationMessageReceived?.Invoke(string.Format("Порт шины MDB успешно настроен: {0}-{1}-{2}-{3}", MDBSerialPort.BaudRate, MDBSerialPort.DataBits, MDBSerialPort.Parity.ToString(), MDBSerialPort.StopBits));
+                ListenMDBSerialPort(token);
+            }
+            catch (Exception ex)
+            {
+                MDBError?.Invoke(ex.Message);
             }
         }
 
         /// <summary>
         /// Считывает данные с ппоследовательного порта шины MDB
         /// </summary>
-        private static async void ListenMDBSerialPort()
+        private static async void ListenMDBSerialPort(CancellationToken token)
         {
-            StartPage.UpdateProgress(5);
             while (true)
             {
                 try
                 {
-                    while (MDBSerialPort == null)
-                    {
-                        await Task.Delay(100);
-                    }
-                    StartPage.UpdateStartLEDs(StartPage.StartPageInstance.UART0LED, Colors.Green);
-                    StartPage.AddItemToLogBox("Порт MDB открыт, ожидание данных...");
+                    MDBInformationMessageReceived?.Invoke("Порт MDB открыт, ожидание данных...");
                     MDBSerialDataReaderObject = new DataReader(MDBSerialPort.InputStream)
                     {
                         InputStreamOptions = InputStreamOptions.Partial
@@ -205,7 +273,7 @@ namespace RPiVendApp
                     List<byte> tmpres = new List<byte> { };
                     while (true)
                     {
-                        Task<uint> loadAsyncTask = MDBSerialDataReaderObject.LoadAsync(64).AsTask(StartPage.GlobalCancellationTokenSource.Token);
+                        Task<uint> loadAsyncTask = MDBSerialDataReaderObject.LoadAsync(64).AsTask(token);
                         uint bytesRead = 0;
                         bytesRead = await loadAsyncTask;
                         if (bytesRead > 0)
@@ -220,23 +288,12 @@ namespace RPiVendApp
 #pragma warning disable CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
                                     Task.Run(() =>
                                     {
-                                        Mutex mut = new Mutex(true, "DataProcessMutex", out bool created);
-                                        if (!created)
-                                        {
-                                            try
-                                            {
-                                                mut.WaitOne();
-                                            }
-                                            catch
-                                            {
-
-                                            }
-                                        }
+                                        MDBDataProcessSemaphore.Wait();
                                         string tmpstr = Encoding.UTF8.GetString(b).Trim();
+                                        if (DebugEnabled) MDBDebug?.Invoke(string.Format("DEBUG READ: {0}", tmpstr));
                                         tmpstr = tmpstr.Replace("\r", "");
                                         MDBIncomingDataProcess(tmpstr);
-                                        mut.ReleaseMutex();
-                                        mut.Dispose();
+                                        MDBDataProcessSemaphore.Release();
                                     });
 #pragma warning restore CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
                                     tmpres = new List<byte> { };
@@ -255,7 +312,7 @@ namespace RPiVendApp
                 }
                 catch (Exception ex)
                 {
-                    StartPage.AddItemToLogBox(ex.Message);
+                    MDBError?.Invoke(ex.Message);
                 }
                 finally
                 {
@@ -287,12 +344,12 @@ namespace RPiVendApp
         /// <returns></returns>
         private static void CurrenzaC2Green_DispenseWatch()
         {
-            while (Dispensetimeout > DateTime.Now)
+            while (DispenseTimeout > DateTime.Now)
             {
                 Task.Delay(1000).Wait();
             }
             DispenseInProgress = false;
-            if (StartPage.UserDeposit == 0) CheckDispenseResult = true;
+            CheckDispenseResult = true;
         }
 
         /// <summary>
@@ -301,7 +358,7 @@ namespace RPiVendApp
         public static Task DispensedCoinsInfoTask()
         {
             Task.Delay(1000).Wait();
-            StartPage.AddItemToLogBox("Старт отслеживания выданной сдачи...");
+            MDBInformationMessageReceived?.Invoke("Старт отслеживания выданной сдачи...");
             while (true)
             {
                 try
@@ -309,7 +366,7 @@ namespace RPiVendApp
                     if (CheckDispenseResult)
                     {
                         GetDispensedInfo();
-                        StartPage.AddItemToLogBox("Ожидаем данные о выданной сдаче...");
+                        MDBInformationMessageReceived?.Invoke("Ожидаем данные о выданной сдаче...");
                         int RetryCount = 0;
                         while (CheckDispenseResult && RetryCount < 51)//ждать ответа от монетоприемника будем 5 секунд, потом забъем хуй и продолжим работать
                         {
@@ -321,14 +378,14 @@ namespace RPiVendApp
                 }
                 catch (Exception ex)
                 {
-                    StartPage.AddItemToLogBox(ex.Message);
+                    MDBError?.Invoke(ex.Message);
                 }
                 Task.Delay(1000).Wait();
             }
         }
 
         /// <summary>
-        /// Currenza C2 Green coin changer and ICT A7/V7 bill validator data processing method.
+        /// MDB answer processing method.
         /// Must fire all MDB events, all events must be handled externally as well.
         /// </summary>
         /// <param name="MDBStringData">String representation if incoming MDB serial data</param>
@@ -346,7 +403,7 @@ namespace RPiVendApp
             {
                 if (MDBStringData == "MDB-UART PLC ready") //MDB-UART adapter PLC started
                 {
-                    MDBStarted?.Invoke();
+                    MDBAdapterStarted?.Invoke();
                     return;
                 }
                 MDBStringData = MDBStringData.Replace(" ","");
@@ -465,10 +522,10 @@ namespace RPiVendApp
                 }
                 finally
                 {
-                    if (((tmpmdbmsg == "BA Unit Disabled") && !(baalreadydisabled)) || (tmpmdbmsg != "BA Unit Disabled"))
+                    if (((tmpmdbmsg == "BA Unit Disabled") && !(BAAlreadyDisabled)) || (tmpmdbmsg != "BA Unit Disabled"))
                     {
                         MDBInformationMessageReceived?.Invoke(tmpmdbmsg);
-                        if (tmpmdbmsg == "BA Unit Disabled") baalreadydisabled = true; else baalreadydisabled = false;
+                        if (tmpmdbmsg == "BA Unit Disabled") BAAlreadyDisabled = true; else BAAlreadyDisabled = false;
                     }
                 }
                 return;
@@ -556,7 +613,7 @@ namespace RPiVendApp
                             break;
                         case 2:
                             tmpmdbmsg = "CC Changer Payout Busy";
-                            Dispensetimeout = DateTime.Now.AddSeconds(3);
+                            DispenseTimeout = DateTime.Now.AddSeconds(5);
                             MDBCCPayOutBusy?.Invoke();
                             if (!DispenseInProgress)
                             {
@@ -604,7 +661,7 @@ namespace RPiVendApp
                 finally
                 {
                     MDBInformationMessageReceived?.Invoke(tmpmdbmsg);
-                    baalreadydisabled = false;
+                    BAAlreadyDisabled = false;
                 }
                 return;
             }
@@ -702,9 +759,15 @@ namespace RPiVendApp
                                     MDBAbswerFromByteSemaphore.Wait();
                                     tmpbyte = AwaitingMDBAnswerFrom;
                                     MDBAbswerFromByteSemaphore.Release();
-                                    if (tmpbyte != 0x00) break;//...либо если ответ пришел
+                                    if (tmpbyte == 0x00) break;//...либо если ответ пришел
                                 }
                                 dw.Stop();
+                                if (DebugEnabled)
+                                {
+                                    StringBuilder hex = new StringBuilder(cmd.Length * 2);
+                                    foreach (byte b in cmd) hex.AppendFormat("{0:x2}", b);
+                                    MDBDebug?.Invoke(string.Format("DEBUG WRITE: {0}", hex.ToString()));
+                                }
                                 MDBAbswerFromByteSemaphore.Wait();//ждем освобождения переменной
                                 AwaitingMDBAnswerFrom = 0x00;
                                 MDBAbswerFromByteSemaphore.Release();//освобождаем переменную
@@ -741,7 +804,7 @@ namespace RPiVendApp
         }
 
         /// <summary>
-        /// Добавляет элемент в список команд для отправки по шине MDB
+        /// Добавляет элементы в конец списка команд для отправки по шине MDB
         /// </summary>
         /// <param name="cmd"></param>
         /// <param name="dispense"></param>
@@ -760,7 +823,7 @@ namespace RPiVendApp
         /// </summary>
         public static void DisableAcceptCoins()
         {
-            AddCommand(MDBCommands.DisableAcceptCoins);//Configure to accept 0.5, 1, 2, 5 and 10 RUR coins
+            AddCommand(MDBCommands.DisableAcceptCoins);
         }
 
         /// <summary>
@@ -768,7 +831,7 @@ namespace RPiVendApp
         /// </summary>
         public static void DisableAcceptBills()
         {
-            AddCommand(MDBCommands.DisableAcceptBills); //Configure Bill Validator to accept only 50 and 100 RUR bills
+            AddCommand(MDBCommands.DisableAcceptBills);
         }
 
         /// <summary>
@@ -776,11 +839,11 @@ namespace RPiVendApp
         /// </summary>
         public static void EnableAcceptCoins()
         {
-            AddCommand(MDBCommands.EnableAcceptCoins);//Configure to accept 0.5, 1, 2, 5 and 10 RUR coins
+            AddCommand(MDBCommands.EnableAcceptCoins);
         }
 
         /// <summary>
-        /// Запрещаем выдачу монет
+        /// Разрешаем выдачу монет
         /// </summary>
         public static void EnableDispenseCoins()
         {
@@ -828,11 +891,11 @@ namespace RPiVendApp
         }
 
         /// <summary>
-        /// Выполняет сброс купюроприемника
+        /// Выполняет сброс купюро и монетоприемника
         /// </summary>
         public static void ResetCashDevices()
         {
-            AddCommand(new byte[][] { MDBCommands.ResetBA, MDBCommands.ResetCC } );//Reset Bill Validator
+            AddCommand(new byte[][] { MDBCommands.ResetBA, MDBCommands.ResetCC } );//Reset bill validator and coin changer
         }
 
         /// <summary>
@@ -850,9 +913,11 @@ namespace RPiVendApp
         public static void GetCCStatus()
         {
             CheckCCTubeStatus = true;
-            AddCommand(MDBCommands.GetCCStatus); //Request Stacker Status
+            AddCommand(MDBCommands.GetCCStatus); //Request CC Tube Status
         }
-
+        /// <summary>
+        /// Структура команд MDB
+        /// </summary>
         private static class MDBCommands
         {
             public static byte[] DisableAcceptBills = new byte[] { 0x34, 0x00, 0x00, 0x00, 0x00, 0x34 };
@@ -869,11 +934,15 @@ namespace RPiVendApp
             public static byte[] ChangerSetup = new byte[] { 0x09, 0x09 };
             public static byte[] BillValidatorSetup = new byte[] { 0x31, 0x31 };
             public static byte[] ReturnBill = new byte[] { 0x35, 0x00, 0x35 };
-
+            /// <summary>
+            /// Команда выдачи сдачи
+            /// </summary>
+            /// <param name="PayOutSum">Максимальная сумма 127 рублей (при коэффициент x2 (на моем экземпляре устройства) в один байт больше не влезет)</param>
+            /// <returns></returns>
             public static byte[] PayoutCoins(int PayOutSum)
             {
                 byte[] payouttmpcmd = new byte[4] { 0x0F, 0x02, 0x00, 0x00 };
-                payouttmpcmd[2] = (byte)(PayOutSum * 2 & 0xff);
+                payouttmpcmd[2] = (byte)((PayOutSum & 0x7f) * 2);
                 payouttmpcmd[3] = (byte)((payouttmpcmd[0] + payouttmpcmd[1] + payouttmpcmd[2]) & 0xff);
                 return payouttmpcmd;
             }

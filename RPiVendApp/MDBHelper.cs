@@ -11,13 +11,20 @@ using Windows.UI.Core;
 
 namespace RPiVendApp
 {
+    /// <summary>
+    /// Класс-прокладка для работы с устройствами приема наличных
+    /// </summary>
     public static class MDBHelper
     {
         /// <summary>
-        /// Инициализируем устройства приема наличных, включаем питание на шине MDB
+        /// Прогресс инициализации: 0 - выкл, 1 - адаптер стартанул, 2,3,4 - инициализация устройств, 5 - готов к работе, 6 - ошибка
+        /// </summary>
+        public static int MDBInitStep = 0;
+        /// <summary>
+        /// Подключаем обработчики событий от устройств, включаем питание на шине MDB
         /// </summary>
         /// <returns></returns>
-        public static async Task Init_MDB()
+        public static async Task StartMDB()
         {
             try
             {
@@ -25,7 +32,7 @@ namespace RPiVendApp
                 {
                     await Task.Delay(100);
                 }
-                MDB.MDBStarted += CashDevices_MDBStarted;
+                MDB.MDBAdapterStarted += CashDevices_MDBStarted;
                 MDB.MDBCCTubesStatus += CashDevices_MDBCCTubesStatus;
                 MDB.MDBChangeDispensed += CashDevices_MDBChangeDispensed;
                 MDB.MDBInsertedBill += CashDevices_MDBInsertedBill;
@@ -37,10 +44,6 @@ namespace RPiVendApp
                 MDB.MDBBAReseted += CashDevices_MDBBAReseted;
                 MDB.MDBCCPayOutBusy += CashDevices_MDBCCPayOutBusy;
                 MDB.MDBInformationMessageReceived += CashDevices_MDBInformationMessageReceived;
-#pragma warning disable CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
-                Task.Run(MDB.DispensedCoinsInfoTask, StartPage.GlobalCancellationTokenSource.Token);
-                Task.Run(MDB.SendCommandTask, StartPage.GlobalCancellationTokenSource.Token);
-#pragma warning restore CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
                 StartPage.UpdateStartLEDs(StartPage.StartPageInstance.MDBLED, Colors.Yellow);
                 StartPage.AddItemToLogBox("Включаем питание шины MDB...");
                 StartPage.MDBPin.Write(GpioPinValue.Low);
@@ -80,9 +83,9 @@ namespace RPiVendApp
                 }
                 try
                 {
-                    if ((!StartPage.bareset) && (MDB.MDBInitStep == 3 || MDB.MDBInitStep == 4))
+                    if ((!StartPage.bareset) && (MDBInitStep == 3 || MDBInitStep == 4))
                     {
-                        MDB.MDBInitStep++;
+                        MDBInitStep++;
                         StartPage.UpdateProgress(5);
                         StartPage.bareset = true;
                         StartPage.UpdateStartLEDs(StartPage.StartPageInstance.MDBBALED, Colors.Green);
@@ -105,13 +108,13 @@ namespace RPiVendApp
                                 Task.Delay(100).Wait();
                                 count++;
                             }
-                            MDB.MDBInitStep = 5;
+                            MDBInitStep = 5;
                             StartPage.AddItemToLogBox("Устройства приема наличных обнаружены и настроены");
                         }
                     }
-                    if ((!StartPage.bainit) && (MDB.MDBInitStep == 1 || MDB.MDBInitStep == 2))
+                    if ((!StartPage.bainit) && (MDBInitStep == 1 || MDBInitStep == 2))
                     {
-                        MDB.MDBInitStep++;
+                        MDBInitStep++;
                         StartPage.UpdateProgress(5);
                         StartPage.bainit = true;
                         StartPage.UpdateStartLEDs(StartPage.StartPageInstance.MDBBALED, Colors.Yellow);
@@ -160,9 +163,9 @@ namespace RPiVendApp
                 }
                 try
                 {
-                    if ((!StartPage.ccreset) && (MDB.MDBInitStep == 3 || MDB.MDBInitStep == 4))
+                    if ((!StartPage.ccreset) && (MDBInitStep == 3 || MDBInitStep == 4))
                     {
-                        MDB.MDBInitStep++;
+                        MDBInitStep++;
                         StartPage.UpdateProgress(5);
                         StartPage.ccreset = true;
                         StartPage.UpdateStartLEDs(StartPage.StartPageInstance.MDBCCLED, Colors.Green);
@@ -185,13 +188,13 @@ namespace RPiVendApp
                                 Task.Delay(100).Wait();
                                 count++;
                             }
-                            MDB.MDBInitStep = 5;
+                            MDBInitStep = 5;
                             StartPage.AddItemToLogBox("Устройства приема наличных обнаружены и настроены");
                         }
                     }
-                    if ((!StartPage.ccinit) && (MDB.MDBInitStep == 1 || MDB.MDBInitStep == 2))
+                    if ((!StartPage.ccinit) && (MDBInitStep == 1 || MDBInitStep == 2))
                     {
-                        MDB.MDBInitStep++;
+                        MDBInitStep++;
                         StartPage.UpdateProgress(5);
                         StartPage.ccinit = true;
                         StartPage.UpdateStartLEDs(StartPage.StartPageInstance.MDBCCLED, Colors.Yellow);
@@ -241,8 +244,9 @@ namespace RPiVendApp
         {
             Task.Run(() =>
             {
-                StartPage.UpdateProgress(10);
+                StartPage.UpdateProgress(15);
                 StartPage.UpdateStartLEDs(StartPage.StartPageInstance.MDBLED, Colors.Green);
+                StartPage.UpdateStartLEDs(StartPage.StartPageInstance.UART0LED, Colors.Green);
                 StartPage.AddItemToLogBox("Найден адаптер MDB-RS232");
                 int count = 0;
                 while (count < 10)
@@ -250,7 +254,7 @@ namespace RPiVendApp
                     Task.Delay(100).Wait();
                     count++;
                 }
-                MDB.MDBInitStep = 1;
+                MDBInitStep = 1;
                 MDB.ResetCashDevices();
             });
         }
@@ -273,7 +277,7 @@ namespace RPiVendApp
             if ((StartPage.CurrentState == StartPage.States.ReadyToServe) || (StartPage.CurrentState == StartPage.States.ReadyToDispenseWater) || (StartPage.CurrentState == StartPage.States.DispenseChange))
             {
                 StartPage.CurrentState = StartPage.States.OutOfService;
-                MDB.MDBInitStep = 6;
+                MDBInitStep = 6;
                 MDB.DisableCashDevices();
 #pragma warning disable CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
                 CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>

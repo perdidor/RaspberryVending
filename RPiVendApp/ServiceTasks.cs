@@ -250,7 +250,7 @@ namespace RPiVendApp
             });
             while (true)
             {
-                if (MDB.MDBInitStep == 5 && !MDB.DispenseInProgress && MDB.CheckDispenseResult)
+                if (MDBHelper.MDBInitStep == 5 && !MDB.DispenseInProgress && MDB.CheckDispenseResult)
                 {
                     MDB.GetBAStatus();
                 }
@@ -291,7 +291,7 @@ namespace RPiVendApp
             });
             while (true)
             {
-                if (MDB.MDBInitStep == 5 && !MDB.DispenseInProgress && !MDB.CheckDispenseResult)
+                if (MDBHelper.MDBInitStep == 5 && !MDB.DispenseInProgress && !MDB.CheckDispenseResult)
                 {
                     MDB.GetCCStatus();
                 }
@@ -386,7 +386,7 @@ namespace RPiVendApp
                 try
                 {
                     StartPage.SystemState.VMCMode = ((int)StartPage.CurrentState).ToString();
-                    StartPage.SystemState.MDBInitStep = MDB.MDBInitStep;
+                    StartPage.SystemState.MDBInitStep = MDBHelper.MDBInitStep;
                     StartPage.CashCounterAccessFlag.Wait();
                     ClientRequest tmpreq = RequestEncoder.EncodeRequestData(StartPage.SystemState);
                     StartPage.CashCounterAccessFlag.Release();
@@ -815,7 +815,7 @@ namespace RPiVendApp
                 await Task.Delay(5000);
             }
         }
-        
+
         /// <summary>
         /// Сравнивает два массива
         /// </summary>
@@ -828,6 +828,7 @@ namespace RPiVendApp
             for (int i = 0; i < a.Length; i++)
             {
                 if (a[i] != b[i]) { return false; }
+
             }
             return true;
         }

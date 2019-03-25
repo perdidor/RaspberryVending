@@ -131,8 +131,6 @@ namespace RPiVendApp
 
         public static StartPage StartPageInstance = null;
 
-        public static long ClientID = 0;
-
         public static CancellationTokenSource GlobalCancellationTokenSource;
 
         public static int WaterFlowPulseCounter = 0;
@@ -324,7 +322,9 @@ namespace RPiVendApp
         private void RunAfterInit()
         {
             if (CurrentDeviceSettings.UseKKT) CashDeskHelper.CashDesk_Init();
-            MDB.ConnectMDBSerialPort(CashDeskDeviceID);
+            MDB.InitWithSerialPortExclude(new List<string> { CashDeskDeviceID }, GlobalCancellationTokenSource.Token);
+            UpdateStartLEDs(StartPageInstance.UART0LED, Colors.Yellow);
+            UpdateProgress(5);
             I2c_Init();
 #pragma warning disable CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
             ServiceTasks.UpdateWaterCounter(0);
@@ -347,7 +347,7 @@ namespace RPiVendApp
             //Task.Run(CCC, GlobalCancellationTokenSource.Token);
             ServiceTasks.StartAll();
             AddItemToLogBox("Задачи запущены");
-            Task.Run(MDBHelper.Init_MDB);
+            Task.Run(MDBHelper.StartMDB);
         }
 
 
