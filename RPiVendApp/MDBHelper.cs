@@ -3,8 +3,10 @@ using Windows.Devices.Gpio;
 using Windows.UI;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
+using System.Collections.Generic;
 using System.Threading;
 using Windows.Storage;
+using System.Linq;
 using System.Threading.Tasks;
 using Windows.ApplicationModel.Core;
 using Windows.UI.Core;
@@ -335,22 +337,18 @@ namespace RPiVendApp
         /// Обрабатыввем сведения о выданной сдаче
         /// </summary>
         /// <param name="DispensedSum"></param>
-        private static void CashDevices_MDBChangeDispensed(int DispensedSum)
+        private static void CashDevices_MDBChangeDispensed(List<MDB.CoinsRecord> CoinsRecords)
         {
-            StartPage.AddItemToLogBox("Выдана сдача, руб: " + DispensedSum.ToString("N2"));
+            StartPage.AddItemToLogBox("Выдана сдача, руб: " + CoinsRecords.Sum(x => x.CoinValue * x.CoinsDispensed).ToString("N2"));
         }
 
         /// <summary>
         /// Обрабатываем сведения о состоянии трубок монетоприемника
         /// </summary>
-        /// <param name="RUR1"></param>
-        /// <param name="RUR2"></param>
-        /// <param name="RUR5"></param>
-        /// <param name="RUR10"></param>
-        private static void CashDevices_MDBCCTubesStatus(int RUR1, int RUR2, int RUR5, int RUR10)
+        private static void CashDevices_MDBCCTubesStatus(List<MDB.CoinChangerTubeRecord> CoinChangerTubeRecords)
         {
 #pragma warning disable CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
-            ServiceTasks.UpdateCashCounter(0, 0, 0, 0, RUR10, RUR5, RUR2, RUR1);
+            ServiceTasks.UpdateCashCounter(0, 0, 0, 0, CoinChangerTubeRecords.First(x => (int)x.CoinValue == 1).CoinsCount , CoinChangerTubeRecords.First(x => (int)x.CoinValue == 2).CoinsCount, CoinChangerTubeRecords.First(x => (int)x.CoinValue == 5).CoinsCount, CoinChangerTubeRecords.First(x => (int)x.CoinValue == 10).CoinsCount);
 #pragma warning restore CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
         }
     }
