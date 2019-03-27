@@ -5,6 +5,7 @@ using Windows.UI.Xaml.Controls;
 using System.Threading;
 using Windows.ApplicationModel.Core;
 using Windows.UI.Core;
+using MDBLib;
 
 
 namespace RPiVendApp

@@ -7,6 +7,7 @@ using Windows.ApplicationModel.Core;
 using Windows.UI.Core;
 using Windows.Devices.Enumeration;
 using Windows.Devices.SerialCommunication;
+using MDBLib;
 
 namespace RPiVendApp
 {

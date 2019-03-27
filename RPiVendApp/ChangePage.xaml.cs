@@ -7,6 +7,7 @@ using System.Threading;
 using System.IO;
 using Windows.ApplicationModel.Core;
 using Windows.Storage;
+using MDBLib;
 using Windows.UI.Core;
 
 // Документацию по шаблону элемента "Пустая страница" см. по адресу https://go.microsoft.com/fwlink/?LinkId=234238

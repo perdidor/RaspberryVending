@@ -114,12 +114,12 @@
       <DependentUpon>ChangePage.xaml</DependentUpon>
     </Compile>
     <Compile Include="MDBHelper.cs" />
+    <Compile Include="MDBLib.cs" />
     <Compile Include="RequestEncoder.cs" />
     <Compile Include="RegistrationPage.xaml.cs">
       <DependentUpon>RegistrationPage.xaml</DependentUpon>
     </Compile>
     <Compile Include="GlobalVars.cs" />
-    <Compile Include="MDB.cs" />
     <Compile Include="OutOfServicePage.xaml.cs">
       <DependentUpon>OutOfServicePage.xaml</DependentUpon>
     </Compile>

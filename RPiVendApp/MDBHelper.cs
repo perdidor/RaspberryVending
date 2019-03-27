@@ -10,6 +10,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Windows.ApplicationModel.Core;
 using Windows.UI.Core;
+using MDBLib;
 
 namespace RPiVendApp
 {
@@ -44,7 +45,7 @@ namespace RPiVendApp
                 MDB.MDBError += CashDevices_MDBError;
                 MDB.MDBCCReseted += CashDevices_MDBCCReseted;
                 MDB.MDBBAReseted += CashDevices_MDBBAReseted;
-                MDB.MDBCCPayOutBusy += CashDevices_MDBCCPayOutBusy;
+                MDB.MDBChangerPayoutStarted += CashDevices_MDBCCPayOutStarted;
                 MDB.MDBInformationMessageReceived += CashDevices_MDBInformationMessageReceived;
                 StartPage.UpdateStartLEDs(StartPage.StartPageInstance.MDBLED, Colors.Yellow);
                 StartPage.AddItemToLogBox("Включаем питание шины MDB...");
@@ -59,7 +60,7 @@ namespace RPiVendApp
         /// <summary>
         /// Монетоприемник занят выдачей сдачи
         /// </summary>
-        private static void CashDevices_MDBCCPayOutBusy()
+        private static void CashDevices_MDBCCPayOutStarted()
         {
             //можно чем-нибудь моргнуть или выдать звуковое сопровождение
         }

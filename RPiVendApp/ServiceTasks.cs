@@ -16,6 +16,7 @@ using Windows.Storage;
 using Windows.System;
 using System.Threading.Tasks;
 using Windows.ApplicationModel.Core;
+using MDBLib;
 using Windows.UI.Core;
 
 namespace RPiVendApp
