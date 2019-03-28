@@ -36,16 +36,16 @@ namespace RPiVendApp
                     await Task.Delay(100);
                 }
                 MDB.MDBAdapterStarted += CashDevices_MDBStarted;
-                MDB.MDBCCTubesStatus += CashDevices_MDBCCTubesStatus;
+                MDB.MDBCoinChangerTubesStatus += CashDevices_MDBCCTubesStatus;
                 MDB.MDBChangeDispensed += CashDevices_MDBChangeDispensed;
                 MDB.MDBInsertedBill += CashDevices_MDBInsertedBill;
                 MDB.MDBInsertedCoinRoutedToCashBox += CashDevices_MDBInsertedCoinRoutedToCashBox;
-                MDB.MDBInsertedCoinRoutedToCCTube += CashDevices_MDBInsertedCoinRoutedToCCTube;
+                MDB.MDBInsertedCoinRoutedToCoinChangerTube += CashDevices_MDBInsertedCoinRoutedToCCTube;
                 MDB.MDBDataProcessingError += CashDevices_MDBDataProcessingError;
                 MDB.MDBError += CashDevices_MDBError;
-                MDB.MDBCCReseted += CashDevices_MDBCCReseted;
-                MDB.MDBBAReseted += CashDevices_MDBBAReseted;
-                MDB.MDBChangerPayoutStarted += CashDevices_MDBCCPayOutStarted;
+                MDB.MDBCoinChangerReseted += CashDevices_MDBCCReseted;
+                MDB.MDBBillValidatorReseted += CashDevices_MDBBAReseted;
+                MDB.MDBCoinChangerPayoutStarted += CashDevices_MDBCCPayOutStarted;
                 MDB.MDBInformationMessageReceived += CashDevices_MDBInformationMessageReceived;
                 StartPage.UpdateStartLEDs(StartPage.StartPageInstance.MDBLED, Colors.Yellow);
                 StartPage.AddItemToLogBox("Включаем питание шины MDB...");
@@ -129,7 +129,9 @@ namespace RPiVendApp
                             Task.Delay(100).Wait();
                             count++;
                         }
-                        MDB.ResetBA();
+#pragma warning disable CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
+                        MDB.ResetBillValidator();
+#pragma warning restore CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
                     }
                 }
                 catch (Exception ex)
@@ -208,7 +210,9 @@ namespace RPiVendApp
                             Task.Delay(100).Wait();
                             count++;
                         }
-                        MDB.ResetCC();
+#pragma warning disable CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
+                        MDB.ResetCoinChanger();
+#pragma warning restore CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
                     }
                 }
                 catch (Exception ex)
@@ -258,7 +262,9 @@ namespace RPiVendApp
                     count++;
                 }
                 MDBInitStep = 1;
+#pragma warning disable CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
                 MDB.ResetCashDevices();
+#pragma warning restore CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
             });
         }
 
@@ -281,7 +287,9 @@ namespace RPiVendApp
             {
                 StartPage.CurrentState = StartPage.States.OutOfService;
                 MDBInitStep = 6;
+#pragma warning disable CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
                 MDB.DisableCashDevices();
+#pragma warning restore CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
 #pragma warning disable CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
                 CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
                 {

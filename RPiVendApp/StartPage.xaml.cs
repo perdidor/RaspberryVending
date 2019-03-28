@@ -546,7 +546,9 @@ namespace RPiVendApp
                         case States.ReadyToDispenseWater:
                             {
                                 CurrentState = States.DispenseChange;
+#pragma warning disable CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
                                 MDB.DisableCashDevices();
+#pragma warning restore CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
                                 WaterValvePin.Write(GpioPinValue.High);
                                 PumpPin.Write(GpioPinValue.High);
                                 StartLEDPin.Write(GpioPinValue.High);
@@ -588,7 +590,9 @@ namespace RPiVendApp
                                     return;
                                 }
                                 CurrentState = States.ReadyToServe;
+#pragma warning disable CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
                                 MDB.EnableCashDevices();
+#pragma warning restore CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
 #pragma warning disable CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
                                 CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
                                 {

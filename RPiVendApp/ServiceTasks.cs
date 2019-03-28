@@ -61,7 +61,9 @@ namespace RPiVendApp
                     await Task.Delay(5000);
                 }
                 StartPage.CurrentState = StartPage.States.ReadyToServe;
+#pragma warning disable CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
                 MDB.EnableCashDevices();
+#pragma warning restore CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
                 await CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
                 {
                     var frame = Window.Current.Content as Frame;
@@ -181,7 +183,9 @@ namespace RPiVendApp
                                     await Task.Delay(1000);
                                 }
                                 StartPage.CurrentState = StartPage.States.OutOfService;
+#pragma warning disable CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
                                 MDB.DisableCashDevices();
+#pragma warning restore CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
                                 await CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
                                 {
                                     var frame = Window.Current.Content as Frame;
@@ -193,7 +197,9 @@ namespace RPiVendApp
                         case "ServiceMode":
                             {
                                 StartPage.CurrentState = StartPage.States.ServiceMode;
+#pragma warning disable CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
                                 MDB.DisableAcceptBills();
+#pragma warning restore CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
                                 await CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
                                 {
                                     var frame = Window.Current.Content as Frame;
@@ -204,7 +210,9 @@ namespace RPiVendApp
                         case "Incasso":
                             {
                                 StartPage.CurrentState = StartPage.States.ServiceMode;
+#pragma warning disable CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
                                 MDB.DisableCashDevices();
+#pragma warning restore CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
                                 await CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
                                 {
                                     var frame = Window.Current.Content as Frame;
@@ -251,9 +259,9 @@ namespace RPiVendApp
             });
             while (true)
             {
-                if (MDBHelper.MDBInitStep == 5 && !MDB.DispenseInProgress && MDB.CheckDispenseResult)
+                if (MDBHelper.MDBInitStep == 5 && !MDB.DispenseInProgress && MDB.AwaitDispenseResult)
                 {
-                    MDB.GetBAStatus();
+                    await MDB.GetBillValidatorStatus();
                 }
                 if (StartPage.CurrentState == StartPage.States.Init)
                 {
@@ -292,9 +300,9 @@ namespace RPiVendApp
             });
             while (true)
             {
-                if (MDBHelper.MDBInitStep == 5 && !MDB.DispenseInProgress && !MDB.CheckDispenseResult)
+                if (MDBHelper.MDBInitStep == 5 && !MDB.DispenseInProgress && !MDB.AwaitDispenseResult)
                 {
-                    MDB.GetCCStatus();
+                    await MDB.GetCoinChangerStatus();
                 }
                 if (StartPage.CurrentState == StartPage.States.Init)
                 {

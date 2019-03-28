@@ -206,7 +206,9 @@ namespace RPiVendApp
                 if (StartPage.CurrentState != StartPage.States.Init && StartPage.CurrentState != StartPage.States.OutOfService && StartPage.CurrentState != StartPage.States.ServiceMode && StartPage.SystemState.KKTStageOver24h)
                 {
                     StartPage.CurrentState = StartPage.States.OutOfService;
+#pragma warning disable CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
                     MDB.DisableCashDevices();
+#pragma warning restore CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
 #pragma warning disable CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
                     CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
                     {

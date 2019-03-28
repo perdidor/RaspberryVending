@@ -86,7 +86,7 @@ namespace RPiVendApp
                 StartPage.UserDeposit = Math.Round(StartPage.UserDeposit, 0, MidpointRounding.AwayFromZero);
                 while ((int)StartPage.UserDeposit > 0)
                 {
-                    while (MDB.DispenseInProgress || MDB.CheckDispenseResult)
+                    while (MDB.DispenseInProgress || MDB.AwaitDispenseResult)
                     {
                         Task.Delay(1000).Wait();
                     }
@@ -96,7 +96,9 @@ namespace RPiVendApp
                         _change = 127;
                     }
                     MDB.DispenseTimeout = DateTime.Now.AddSeconds(10);
+#pragma warning disable CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
                     MDB.PayoutCoins(_change);//выдаем сдачу монетами
+#pragma warning restore CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
                     StartPage.UserDeposit -= _change;
                     Task.Delay(2000).Wait();
                 }
@@ -114,7 +116,9 @@ namespace RPiVendApp
                     return;
                 }
                 StartPage.CurrentState = StartPage.States.ReadyToServe;
+#pragma warning disable CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
                 MDB.EnableCashDevices();
+#pragma warning restore CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
 #pragma warning disable CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
                 CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
                 {
