@@ -281,6 +281,8 @@ namespace RPiVendApp
         {
             if ((StartPage.CurrentState == StartPage.States.ReadyToServe) || (StartPage.CurrentState == StartPage.States.ReadyToDispenseWater) || (StartPage.CurrentState == StartPage.States.DispenseChange))
             {
+                ChangePage.ChangeModeSemaphore.Wait();//надо убедиться, что выдача сдачи так или иначе завершена и сессия продажи закрыта
+                ChangePage.ChangeModeSemaphore.Release();//удерживать флаг эксклюзивного доступа ни к чему, освобождаем
                 StartPage.CurrentState = StartPage.States.OutOfService;
                 MDBInitStep = 6;
 #pragma warning disable CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
@@ -344,7 +346,10 @@ namespace RPiVendApp
         /// <param name="DispensedSum"></param>
         private static void CashDevices_MDBChangeDispensed(List<MDB.CoinsRecord> CoinsRecords)
         {
-            StartPage.AddItemToLogBox("Выдана сдача, руб: " + CoinsRecords.Sum(x => x.CoinValue * x.CoinsDispensed).ToString("N2"));
+            double tmpdispvalue = CoinsRecords.Sum(x => x.CoinValue * x.CoinsDispensed);
+            StartPage.AddItemToLogBox("Выдана сдача, руб: " + tmpdispvalue.ToString("N2"));
+            StartPage.UserDeposit -= tmpdispvalue;
+            StartPage.CurrentSaleSession.ActualChangeDispensed += (int)tmpdispvalue;
         }
 
         /// <summary>

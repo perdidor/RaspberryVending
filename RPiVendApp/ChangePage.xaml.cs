@@ -5,6 +5,7 @@ using Windows.UI.Xaml.Navigation;
 using System.Threading.Tasks;
 using System.Threading;
 using System.IO;
+using System.Linq;
 using Windows.ApplicationModel.Core;
 using Windows.Storage;
 using MDBLib;
@@ -75,32 +76,51 @@ namespace RPiVendApp
 
                 }
             }
-            Task.Delay(15000).Wait();
+            while (CashDesk.PendingTasks.Count(x => x.Status != CashDesk.KKTTaskStatus.Completed) > 0)
+            {
+                Task.Delay(100).Wait();
+            }
             try
             {
                 CashDesk.GetCurrentStageParameters();
-                StartPage.CurrentSaleSession.ActualChangeDispensed = (int)Math.Round(StartPage.UserDeposit, 0, MidpointRounding.AwayFromZero);
-                StartPage.CurrentSaleSession.ChangeActualDiff = StartPage.CurrentSaleSession.ActualChangeDispensed - StartPage.UserDeposit;
-                StartPage.CurrentSaleSession.CompleteSession();
                 ServiceTasks.UpdateWaterCounter(StartPage.CurrentSaleSession.Quantity);
                 StartPage.UserDeposit = Math.Round(StartPage.UserDeposit, 0, MidpointRounding.AwayFromZero);
+                int ExpectedDeposit = (int)StartPage.UserDeposit;
                 while ((int)StartPage.UserDeposit > 0)
                 {
                     while (MDB.DispenseInProgress || MDB.AwaitDispenseResult)
                     {
                         Task.Delay(1000).Wait();
                     }
-                    int _change = (int)StartPage.UserDeposit;
-                    if (_change > 127)//не более 127 рублей в одной порции сдачи, ограничение монетоприемника
+                    if (ExpectedDeposit == (int)StartPage.UserDeposit)
                     {
-                        _change = 127;
+                        ExpectedDeposit = (int)StartPage.UserDeposit - (int)StartPage.UserDeposit & 0x7f;
+                        MDB.PayoutCoinsAsync((int)StartPage.UserDeposit & 0x7f).Wait();//выдаем сдачу монетами, не более 127 рублей за раз
                     }
-#pragma warning disable CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
-                    MDB.PayoutCoinsAsync(_change);//выдаем сдачу монетами
-#pragma warning restore CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
-                    StartPage.UserDeposit -= _change;
-                    Task.Delay(2000).Wait();
+                    else
+                    {
+                        if ((int)StartPage.UserDeposit > 0)
+                        {
+                            //это не очень хорошая ситуация, часть сдачи или всю мы не отдали,
+                            //либо отдали, но монетоприемник не прислал об этом никакой информации по какой-то причине
+                            //в отведенное для этого время (см MDBHelper.CashDevices_MDBChangeDispensed).
+                            //Информация об этом будет видна в личном кабинете, в таблице продаж отражается 
+                            //выданная сдача и разница между расчетным и реальнно выданным значением.
+                            //Если монетоприемник пришлет ошибку, автомат перейдет в режим OutOfService автоматически (см MDBHelper.CashDevices_MDBError)
+                            //выходим из процедуры выдачи сдачи, не будем разбрасывать зря бабло.
+                            break;
+                        }
+                    }
                 }
+            }
+            catch
+            {
+
+            }
+            finally
+            {
+                StartPage.CurrentSaleSession.ChangeActualDiff = StartPage.CurrentSaleSession.ActualChangeDispensed - StartPage.CurrentSaleSession.UserCash;//пишем разницу между расчетным и реальнно выданным значением сдачи
+                StartPage.CurrentSaleSession.CompleteSession();//закрываем продажу
                 string oosfilename = ApplicationData.Current.LocalFolder.Path + "\\" + GlobalVars.HardWareID + ".031";
                 if (File.Exists(oosfilename))
                 {
@@ -112,25 +132,23 @@ namespace RPiVendApp
                         frame.Navigate(typeof(OutOfServicePage));
                     });
 #pragma warning restore CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
-                    return;
                 }
-                StartPage.CurrentState = StartPage.States.ReadyToServe;
-#pragma warning disable CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
-                MDB.EnableCashDevicesAsync();
-#pragma warning restore CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
-#pragma warning disable CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
-                CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+                else
                 {
-                    var frame = Window.Current.Content as Frame;
-                    frame.Navigate(typeof(MainPage));
-                });
+                    StartPage.CurrentState = StartPage.States.ReadyToServe;
+#pragma warning disable CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
+                    MDB.EnableCashDevicesAsync();
 #pragma warning restore CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
+#pragma warning disable CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
+                    CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+                    {
+                        var frame = Window.Current.Content as Frame;
+                        frame.Navigate(typeof(MainPage));
+                    });
+#pragma warning restore CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
+                }
+                ChangeModeSemaphore.Release();
             }
-            catch
-            {
-
-            }
-            ChangeModeSemaphore.Release();
         }
     }
 }
