@@ -27,14 +27,10 @@ namespace RPiVendApp
         /// Подключаем обработчики событий от устройств, включаем питание на шине MDB
         /// </summary>
         /// <returns></returns>
-        public static async Task StartMDB()
+        public static void StartMDB()
         {
             try
             {
-                while (MDB.MDBSerialPort == null)
-                {
-                    await Task.Delay(100);
-                }
                 MDB.MDBAdapterStarted += CashDevices_MDBStarted;
                 MDB.MDBCoinChangerTubesStatus += CashDevices_MDBCCTubesStatus;
                 MDB.MDBChangeDispensed += CashDevices_MDBChangeDispensed;
@@ -130,7 +126,7 @@ namespace RPiVendApp
                             count++;
                         }
 #pragma warning disable CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
-                        MDB.ResetBillValidator();
+                        MDB.ResetBillValidatorAsync();
 #pragma warning restore CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
                     }
                 }
@@ -211,7 +207,7 @@ namespace RPiVendApp
                             count++;
                         }
 #pragma warning disable CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
-                        MDB.ResetCoinChanger();
+                        MDB.ResetCoinChangerAsync();
 #pragma warning restore CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
                     }
                 }
@@ -263,7 +259,7 @@ namespace RPiVendApp
                 }
                 MDBInitStep = 1;
 #pragma warning disable CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
-                MDB.ResetCashDevices();
+                MDB.ResetCashDevicesAsync();
 #pragma warning restore CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
             });
         }
@@ -288,7 +284,7 @@ namespace RPiVendApp
                 StartPage.CurrentState = StartPage.States.OutOfService;
                 MDBInitStep = 6;
 #pragma warning disable CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
-                MDB.DisableCashDevices();
+                MDB.DisableCashDevicesAsync();
 #pragma warning restore CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
 #pragma warning disable CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
                 CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>

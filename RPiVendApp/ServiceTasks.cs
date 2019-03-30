@@ -62,7 +62,7 @@ namespace RPiVendApp
                 }
                 StartPage.CurrentState = StartPage.States.ReadyToServe;
 #pragma warning disable CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
-                MDB.EnableCashDevices();
+                MDB.EnableCashDevicesAsync();
 #pragma warning restore CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
                 await CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
                 {
@@ -184,7 +184,7 @@ namespace RPiVendApp
                                 }
                                 StartPage.CurrentState = StartPage.States.OutOfService;
 #pragma warning disable CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
-                                MDB.DisableCashDevices();
+                                MDB.DisableCashDevicesAsync();
 #pragma warning restore CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
                                 await CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
                                 {
@@ -198,7 +198,7 @@ namespace RPiVendApp
                             {
                                 StartPage.CurrentState = StartPage.States.ServiceMode;
 #pragma warning disable CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
-                                MDB.DisableAcceptBills();
+                                MDB.DisableAcceptBillsAsync();
 #pragma warning restore CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
                                 await CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
                                 {
@@ -211,7 +211,7 @@ namespace RPiVendApp
                             {
                                 StartPage.CurrentState = StartPage.States.ServiceMode;
 #pragma warning disable CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
-                                MDB.DisableCashDevices();
+                                MDB.DisableCashDevicesAsync();
 #pragma warning restore CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
                                 await CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
                                 {
@@ -261,7 +261,7 @@ namespace RPiVendApp
             {
                 if (MDBHelper.MDBInitStep == 5 && !MDB.DispenseInProgress && MDB.AwaitDispenseResult)
                 {
-                    await MDB.GetBillValidatorStatus();
+                    await MDB.GetBillValidatorStatusAsync();
                 }
                 if (StartPage.CurrentState == StartPage.States.Init)
                 {
@@ -302,7 +302,7 @@ namespace RPiVendApp
             {
                 if (MDBHelper.MDBInitStep == 5 && !MDB.DispenseInProgress && !MDB.AwaitDispenseResult)
                 {
-                    await MDB.GetCoinChangerStatus();
+                    await MDB.GetCoinChangerTubeStatusAsync();
                 }
                 if (StartPage.CurrentState == StartPage.States.Init)
                 {
