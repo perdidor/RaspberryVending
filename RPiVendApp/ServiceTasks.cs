@@ -261,7 +261,7 @@ namespace RPiVendApp
             {
                 if (MDBHelper.MDBInitStep == 5 && !MDB.DispenseInProgress && MDB.AwaitDispenseResult)
                 {
-                    await MDB.GetBillValidatorStatusAsync();
+                    await MDB.GetBillValidatorStackerStatusAsync();
                 }
                 if (StartPage.CurrentState == StartPage.States.Init)
                 {
