@@ -1,14 +1,18 @@
 ﻿using System;
 using System.Drawing;
+using System.Web;
 using System.Linq;
 using System.Text;
+using System.Data.EntityClient;
 using System.IO;
+using System.Xml.Linq;
 using System.Windows.Forms;
 using TwoFactorAuthNet;
 using System.Threading.Tasks;
 using System.Security.AccessControl;
 using System.Net.Mail;
 using System.Security.Cryptography;
+using Microsoft.Data.ConnectionUI;
 
 namespace VendingServerInitialSetup
 {
@@ -17,6 +21,9 @@ namespace VendingServerInitialSetup
         TwoFactorAuth tfa = null;
         string otpsecret = "";
         bool newsettings = true;
+        string sqlconnstr = "";
+        string entityconnstr = "";
+        string entityMetadata = @"res://*/SetupModel.csdl|res://*/SetupModel.ssdl|res://*/SetupModel.msl";
 
         public Form1()
         {
@@ -38,74 +45,130 @@ namespace VendingServerInitialSetup
         private void Form1_Load(object sender, EventArgs e)
         {
             SMTPTestOK = false;
+            bool connOK = false;
+            bool exitapp = false;
             DateTime dt = DateTime.Now;
             long cdt = Convert.ToInt64(dt.ToString("yyyyMMddHHmmss"));
             string cdtstr = dt.ToString("dd.MM.yyyy HH:mm:ss");
-            using (VendingEntities dc = new VendingEntities())
+            while (!connOK)
             {
-                using (var dbContextTransaction = dc.Database.BeginTransaction())
+                try
                 {
-                    try
+                    EntityConnectionStringBuilder csb = new EntityConnectionStringBuilder();
+                    csb.Metadata = entityMetadata;
+                    csb.Provider = "System.Data.SqlClient";
+                    csb.ProviderConnectionString = sqlconnstr;
+                    using (VendingEntities dc = (sqlconnstr == "") ? new VendingEntities() : new VendingEntities(csb.ToString()))
                     {
-                        WebSettings extmpws = dc.WebSettings.First();
-                        Accounts extmpacc = dc.Accounts.First(x => x.UserID == extmpws.AdminEmail);
-                        DialogResult tmpres = MessageBox.Show("Edit existing settings? Answering \"No\" will completely delete them, \"Cancel\" to stop operation and exit", "Settings found in DB!", MessageBoxButtons.YesNoCancel, MessageBoxIcon.Warning);
-                        switch (tmpres)
+                        using (var dbContextTransaction = dc.Database.BeginTransaction())
                         {
-                            case DialogResult.Yes:
+                            connOK = true;
+                            if (sqlconnstr != "")
+                            {
+                                entityconnstr = csb.ToString();
+                                var appconfigFile = System.Configuration.ConfigurationManager.OpenExeConfiguration(System.Configuration.ConfigurationUserLevel.None);
+                                var settings = appconfigFile.ConnectionStrings;
+                                settings.ConnectionStrings["VendingServerInitialSetup.Properties.Settings.VendingConnectionString"].ConnectionString = sqlconnstr;
+                                settings.ConnectionStrings["VendingEntities"].ConnectionString = entityconnstr;
+                                appconfigFile.Save(System.Configuration.ConfigurationSaveMode.Modified);
+                                System.Configuration.ConfigurationManager.RefreshSection(appconfigFile.AppSettings.SectionInformation.Name);
+                                OpenFileDialog ofd = new OpenFileDialog()
                                 {
-                                    newsettings = false;
-                                    adminemailtextbox.Text = extmpws.AdminEmail;
-                                    bingmapsapikeytextbox.Text = extmpws.BingMapsAPIKey;
-                                    fromemailtextbox.Text = extmpws.MailFromAddress;
-                                    sendernametextbox.Text = extmpws.EMailDisplayName;
-                                    smtpusernametextbox.Text = extmpws.MailLogin;
-                                    smtppasswordtextbox.Text = extmpws.MailPassword;
-                                    smtpusesslcheckbox.Checked = extmpws.SMTPUseSSL;
-                                    userregistersubjtextbox.Text = extmpws.RegAccountMailSubject;
-                                    devregistersubjtextbox.Text = extmpws.RegDeviceMailSubject;
-                                    serverendpointtextbox.Text = extmpws.ServerEndPoint;
-                                    sitenametextbox.Text = extmpws.SiteName;
-                                    smtphosttextbox.Text = extmpws.SMTPHost;
-                                    smtpporttextbox.Text = extmpws.SMTPPort.ToString();
-                                    maillogincheckbox.Checked = extmpws.MailUseSMTPAuth;
-                                    adminemailtextbox.Text = extmpacc.UserID;
-                                    otpsecret = extmpacc.TOTPSecret;
-                                    break;
+                                    AddExtension = true,
+                                    Filter = "config files | web.config",
+                                    FilterIndex = 0,
+                                    Title = "Укажите файл конфигурации сервера (обычно располагается в корне сайта)",
+                                    InitialDirectory = "C:\\inetpub\\wwwroot"
+                                };
+                                if (ofd.ShowDialog() == DialogResult.OK && ofd.CheckFileExists)
+                                {
+                                    var config = XDocument.Load(ofd.FileName);
+                                    var targetNode = config.Root.Element("connectionStrings").Element("add").Attribute("connectionString");
+                                    targetNode.Value = string.Concat("metadata=res://*/App_Code.VendingModel.csdl|res://*/App_Code.VendingModel.ssdl|res://*/App_Code.VendingModel.msl;provider=System.Data.SqlClient;provider connection string=\"", sqlconnstr, ";MultipleActiveResultSets=True;App=EntityFramework\"");
+                                    config.Save(ofd.FileName);
                                 }
-                            case DialogResult.No:
-                                {
-                                    newsettings = true;
-                                    dc.Accounts.Remove(extmpacc);
-                                    dc.WebSettings.Remove(extmpws);
-                                    SystemLog tmplog = new SystemLog()
+                            }
+                            WebSettings extmpws = null;
+                            try
+                            {
+                                extmpws = dc.WebSettings.First();
+                            }
+                            catch
+                            {
+                                newsettings = true;
+                                break;
+                            }
+                            Accounts extmpacc = dc.Accounts.First(x => x.UserID == extmpws.AdminEmail);
+                            DialogResult tmpres = MessageBox.Show("Редактировать существующие настройки? Ответ \"Нет\" удалит их полностью, \"Отмена\" - выход из приложения", "В базе данных найдены настройки!", MessageBoxButtons.YesNoCancel, MessageBoxIcon.Warning);
+                            switch (tmpres)
+                            {
+                                case DialogResult.Yes:
                                     {
-                                        DateTime = cdt,
-                                        DateTimeStr = cdtstr,
-                                        EventText = "Removed existing settings",
-                                        Description = "",
-                                        UserID = "Local administrator",
-                                        IPAddress = "localhost"
-                                    };
-                                    dc.SystemLog.Add(tmplog);
-                                    dc.SaveChanges();
-                                    dbContextTransaction.Commit();
-                                    break;
-                                }
-                            case DialogResult.Cancel:
-                                {
-                                    Application.Exit();
-                                    break;
-                                }
-                            default: break;
+                                        newsettings = false;
+                                        adminemailtextbox.Text = extmpws.AdminEmail;
+                                        bingmapsapikeytextbox.Text = extmpws.BingMapsAPIKey;
+                                        fromemailtextbox.Text = extmpws.MailFromAddress;
+                                        sendernametextbox.Text = extmpws.EMailDisplayName;
+                                        smtpusernametextbox.Text = extmpws.MailLogin;
+                                        smtppasswordtextbox.Text = extmpws.MailPassword;
+                                        smtpusesslcheckbox.Checked = extmpws.SMTPUseSSL;
+                                        userregistersubjtextbox.Text = extmpws.RegAccountMailSubject;
+                                        devregistersubjtextbox.Text = extmpws.RegDeviceMailSubject;
+                                        serverendpointtextbox.Text = extmpws.ServerEndPoint;
+                                        sitenametextbox.Text = extmpws.SiteName;
+                                        smtphosttextbox.Text = extmpws.SMTPHost;
+                                        smtpporttextbox.Text = extmpws.SMTPPort.ToString();
+                                        maillogincheckbox.Checked = extmpws.MailUseSMTPAuth;
+                                        adminemailtextbox.Text = extmpacc.UserID;
+                                        otpsecret = extmpacc.TOTPSecret;
+                                        break;
+                                    }
+                                case DialogResult.No:
+                                    {
+                                        newsettings = true;
+                                        dc.Accounts.Remove(extmpacc);
+                                        dc.WebSettings.Remove(extmpws);
+                                        SystemLog tmplog = new SystemLog()
+                                        {
+                                            DateTime = cdt,
+                                            DateTimeStr = cdtstr,
+                                            EventText = "Настройки удалены",
+                                            Description = "",
+                                            UserID = "Local administrator",
+                                            IPAddress = "localhost"
+                                        };
+                                        dc.SystemLog.Add(tmplog);
+                                        dc.SaveChanges();
+                                        dbContextTransaction.Commit();
+                                        break;
+                                    }
+                                case DialogResult.Cancel:
+                                    {
+                                        exitapp = true;
+                                        break;
+                                    }
+                                default: break;
+                            }
                         }
                     }
-                    catch
+                }
+                catch (System.Data.Entity.Core.EntityException)
+                {
+                    DataConnectionDialog dcd = new DataConnectionDialog();
+                    dcd.DataSources.Add(DataSource.SqlDataSource);
+                    DialogResult tmpdr = DataConnectionDialog.Show(dcd);
+                    if (tmpdr == DialogResult.OK)
                     {
-                        newsettings = true;
+                        sqlconnstr = dcd.ConnectionString;
+                    }
+                    if (tmpdr == DialogResult.Cancel)
+                    {
+                        exitapp = true;
+                        break;
                     }
                 }
             }
+            if (exitapp) Application.Exit();
         }
 
         private void LoadSettings()
@@ -116,6 +179,26 @@ namespace VendingServerInitialSetup
         private void Page1_TextChanged(object sender, EventArgs e)
         {
             wizardPage1.AllowNext = (adminpassrepeattextbox.Text != "" && adminpasstextbox.TextLength > 5 && adminpasstextbox.Text == adminpassrepeattextbox.Text);
+        }
+
+        private string TryGetDataConnectionStringFromUser()
+        {
+            string res = "";
+            try
+            {
+                DataConnectionDialog dcd = new DataConnectionDialog();
+                DataConnectionConfiguration dcs = new DataConnectionConfiguration(null);
+                dcs.LoadConfiguration(dcd);
+                if (DataConnectionDialog.Show(dcd) == DialogResult.OK)
+                {
+                    res = dcd.ConnectionString;
+                }
+            }
+            catch
+            {
+                res = "";
+            }
+            return res;
         }
 
         private void wizardPage2_Initialize(object sender, AeroWizard.WizardPageInitEventArgs e)
@@ -134,13 +217,13 @@ namespace VendingServerInitialSetup
         {
             if (tfa.VerifyCode(otpsecret, otptextbox.Text))
             {
-                MessageBox.Show("Two-factor authentication setup complete. Proceed to next page.", "SUCCESS", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                MessageBox.Show("Двухфакторная авторизация успешно настроена.", "ОК", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 wizardPage2.AllowNext = true;
                 checkotpbutton.Enabled = false;
                 otpsecretpicture.Image = null;
             } else
             {
-                MessageBox.Show("WRONG ONE-TIME CODE!!!", "FAIL", MessageBoxButtons.OK, MessageBoxIcon.Stop);
+                MessageBox.Show("НЕПРАВИЛЬНЫЙ ОДНОРАЗОВЫЙ ПАРОЛЬ!!!", "ОШИБКА", MessageBoxButtons.OK, MessageBoxIcon.Stop);
             }
             otptextbox.Text = "";
         }
@@ -158,7 +241,7 @@ namespace VendingServerInitialSetup
 
         private void FinishWizard(object sender, AeroWizard.WizardPageConfirmEventArgs e)
         {
-            using (VendingEntities dc = new VendingEntities())
+            using (VendingEntities dc = (sqlconnstr == "") ? new VendingEntities() : new VendingEntities(entityconnstr))
             {
                 using (var dbContextTransaction = dc.Database.BeginTransaction())
                 {
@@ -169,7 +252,7 @@ namespace VendingServerInitialSetup
                     byte[] HashedPsssword = shaM.ComputeHash(Encoding.UTF8.GetBytes(adminpasstextbox.Text));
                     if (!SetFolderPermission(chartdirtextbox.Text))
                     {
-                        MessageBox.Show(@"Unable to create or set 'FULL ACCESS' permissions for user 'IIS AppPool\DefaultAppPool' on folder '" + chartdirtextbox.Text + "'. You have to set it manually or web charts will not work.", "Folder permissions", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                        MessageBox.Show(@"Невозможно установить разрешения 'FULL ACCESS' для пользователя 'IIS AppPool\DefaultAppPool' на каталог '" + chartdirtextbox.Text + "'. Необходимо сделать это вручную, в противном случае на сайте не будут показываться графики.", "Установка разрешений на каталог", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                     }
                     try
                     {
@@ -184,7 +267,7 @@ namespace VendingServerInitialSetup
                         try
                         {
                             tmpkeys = dc.CryptoKeys.First();
-                            MessageBox.Show("KeyPair exists, no new key generation wil performed! You have to manually delete keypair from Database to generate new one.", "Key generation", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                            MessageBox.Show("Ключевая пара присутствует в БД, генерация ключей ОТМЕНЕНА! Для генерации новой пары ключей необходимо вручную удалить старые из базы данных.", "Генерация ключей", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                         }
                         catch
                         {
@@ -196,21 +279,9 @@ namespace VendingServerInitialSetup
                             };
                             dc.CryptoKeys.Add(tmpkeys);
                             dc.SaveChanges();
-                            MessageBox.Show("New keypair generated. You have to manually add server's public key to RpiVendApp project's global variables. Devices with old server key must be updated to keep functioning.", "Key generation", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                            SaveFileDialog sfd = new SaveFileDialog()
-                            {
-                                AddExtension = true,
-                                Filter = "Text File | *.txt",
-                                FilterIndex = 0,
-                                FileName = "pubkey.txt",
-                                OverwritePrompt = true,
-                                Title = "Select file to save server's public key",
-                                InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments)
-                            };
-                            if (sfd.ShowDialog() == DialogResult.OK && sfd.FileName != "")
-                            {
-                                File.WriteAllText(sfd.FileName, Convert.ToBase64String(tmpkeys.PublicKey));
-                            }
+                            MessageBox.Show("Сгенерированы новые ключи. Необходимо изменить вручную открытый ключ сервера в настройках RpiVendApp. На устройствах со старыми ключами ПО должно быть обновлено для продолжения работы.", "Генерация ключей", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                            File.WriteAllText("pubkey.txt", Convert.ToBase64String(tmpkeys.PublicKey));
+                            System.Diagnostics.Process.Start("pubkey.txt");
                         }
                         if (newsettings)
                         {
@@ -253,7 +324,7 @@ namespace VendingServerInitialSetup
                             {
                                 DateTime = cdt,
                                 DateTimeStr = cdtstr,
-                                EventText = "Initial setup complete",
+                                EventText = "начальная настройка завершена",
                                 Description = "",
                                 UserID = "Local administrator",
                                 IPAddress = "localhost"
@@ -292,7 +363,7 @@ namespace VendingServerInitialSetup
                             {
                                 DateTime = cdt,
                                 DateTimeStr = cdtstr,
-                                EventText = "System settings changed",
+                                EventText = "Настройки изменены и сохранены",
                                 Description = "",
                                 UserID = "Local administrator",
                                 IPAddress = "localhost"
@@ -301,12 +372,12 @@ namespace VendingServerInitialSetup
                             dc.SaveChanges();
                         }
                         dbContextTransaction.Commit();
-                        MessageBox.Show("Settings updated. Program will be closed.", "SUCCESS", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                        MessageBox.Show("Настройки сохранены. Программа будет закрыта.", "ОК", MessageBoxButtons.OK, MessageBoxIcon.Information);
                     }
                     catch (Exception ex)
                     {
                         dbContextTransaction.Rollback();
-                        MessageBox.Show("Settings NOT updated. Program will be closed." + Environment.NewLine + "Exception: " + ex.Message + Environment.NewLine + "Inner exception: " + ex.InnerException?.Message, "FAIL", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        MessageBox.Show("Ошибка сохранения настроек. Программа будет закрыта." + Environment.NewLine + "Exception: " + ex.Message + Environment.NewLine + "Inner exception: " + ex.InnerException?.Message, "FAIL", MessageBoxButtons.OK, MessageBoxIcon.Error);
                     }
                 }
             }
@@ -314,7 +385,7 @@ namespace VendingServerInitialSetup
 
         private void newotpsecretbutton_Click(object sender, EventArgs e)
         {
-            DialogResult tmpres = MessageBox.Show("Existing 2FA secret will be rewritten, you have to scan QR code again. Proceed?", "Warning!!!", MessageBoxButtons.YesNo, MessageBoxIcon.Warning);
+            DialogResult tmpres = MessageBox.Show("Существующий секрет двухфакторной авторизации для администратора сайта будет перезаписан. Продолжить?", "Внимание!!!", MessageBoxButtons.YesNo, MessageBoxIcon.Warning);
             if (tmpres == DialogResult.Yes)
             {
                 tfa = new TwoFactorAuth("Vending control system");
@@ -364,7 +435,7 @@ namespace VendingServerInitialSetup
             }
             catch (Exception ex)
             {
-                MessageBox.Show(ex.Message + Environment.NewLine + ex.InnerException?.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                MessageBox.Show(ex.Message + Environment.NewLine + ex.InnerException?.Message, "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Warning);
             }
             return false;
         }
@@ -405,10 +476,10 @@ namespace VendingServerInitialSetup
             });
             if (SMTPTestOK)
             {
-                MessageBox.Show("SMTP test passed OK, check your inbox at " + adminemailtextbox.Text, "Information", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                MessageBox.Show("Проверка настроек SMTP завершена, проверьте входящие письма в ящике  " + adminemailtextbox.Text, "Информация", MessageBoxButtons.OK, MessageBoxIcon.Information);
             } else
             {
-                MessageBox.Show("SMTP test FAILED with error:" + Environment.NewLine + ex?.Message + Environment.NewLine + ex?.InnerException?.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show("Проверка SMTP настроек завершена с ошибкой:" + Environment.NewLine + ex?.Message + Environment.NewLine + ex?.InnerException?.Message, "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
             Cursor.Current = Cursors.AppStarting;
             wizardPage4.Enabled = true;
