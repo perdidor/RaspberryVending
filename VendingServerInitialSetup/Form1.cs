@@ -54,10 +54,12 @@ namespace VendingServerInitialSetup
             {
                 try
                 {
-                    EntityConnectionStringBuilder csb = new EntityConnectionStringBuilder();
-                    csb.Metadata = entityMetadata;
-                    csb.Provider = "System.Data.SqlClient";
-                    csb.ProviderConnectionString = sqlconnstr;
+                    EntityConnectionStringBuilder csb = new EntityConnectionStringBuilder
+                    {
+                        Metadata = entityMetadata,
+                        Provider = "System.Data.SqlClient",
+                        ProviderConnectionString = sqlconnstr
+                    };
                     using (VendingEntities dc = (sqlconnstr == "") ? new VendingEntities() : new VendingEntities(csb.ToString()))
                     {
                         using (var dbContextTransaction = dc.Database.BeginTransaction())
@@ -72,20 +74,22 @@ namespace VendingServerInitialSetup
                                 settings.ConnectionStrings["VendingEntities"].ConnectionString = entityconnstr;
                                 appconfigFile.Save(System.Configuration.ConfigurationSaveMode.Modified);
                                 System.Configuration.ConfigurationManager.RefreshSection(appconfigFile.AppSettings.SectionInformation.Name);
-                                OpenFileDialog ofd = new OpenFileDialog()
+                                using (OpenFileDialog ofd = new OpenFileDialog()
                                 {
                                     AddExtension = true,
                                     Filter = "config files | web.config",
                                     FilterIndex = 0,
                                     Title = "Укажите файл конфигурации сервера (обычно располагается в корне сайта)",
                                     InitialDirectory = "C:\\inetpub\\wwwroot"
-                                };
-                                if (ofd.ShowDialog() == DialogResult.OK && ofd.CheckFileExists)
+                                })
                                 {
-                                    var config = XDocument.Load(ofd.FileName);
-                                    var targetNode = config.Root.Element("connectionStrings").Element("add").Attribute("connectionString");
-                                    targetNode.Value = string.Concat("metadata=res://*/App_Code.VendingModel.csdl|res://*/App_Code.VendingModel.ssdl|res://*/App_Code.VendingModel.msl;provider=System.Data.SqlClient;provider connection string=\"", sqlconnstr, ";MultipleActiveResultSets=True;App=EntityFramework\"");
-                                    config.Save(ofd.FileName);
+                                    if (ofd.ShowDialog() == DialogResult.OK && ofd.CheckFileExists)
+                                    {
+                                        var config = XDocument.Load(ofd.FileName);
+                                        var targetNode = config.Root.Element("connectionStrings").Element("add").Attribute("connectionString");
+                                        targetNode.Value = string.Concat("metadata=res://*/App_Code.VendingModel.csdl|res://*/App_Code.VendingModel.ssdl|res://*/App_Code.VendingModel.msl;provider=System.Data.SqlClient;provider connection string=\"", sqlconnstr, ";MultipleActiveResultSets=True;App=EntityFramework\"");
+                                        config.Save(ofd.FileName);
+                                    }
                                 }
                             }
                             WebSettings extmpws = null;
@@ -171,34 +175,10 @@ namespace VendingServerInitialSetup
             if (exitapp) Application.Exit();
         }
 
-        private void LoadSettings()
-        {
-            
-        }
-
+ 
         private void Page1_TextChanged(object sender, EventArgs e)
         {
             wizardPage1.AllowNext = (adminpassrepeattextbox.Text != "" && adminpasstextbox.TextLength > 5 && adminpasstextbox.Text == adminpassrepeattextbox.Text);
-        }
-
-        private string TryGetDataConnectionStringFromUser()
-        {
-            string res = "";
-            try
-            {
-                DataConnectionDialog dcd = new DataConnectionDialog();
-                DataConnectionConfiguration dcs = new DataConnectionConfiguration(null);
-                dcs.LoadConfiguration(dcd);
-                if (DataConnectionDialog.Show(dcd) == DialogResult.OK)
-                {
-                    res = dcd.ConnectionString;
-                }
-            }
-            catch
-            {
-                res = "";
-            }
-            return res;
         }
 
         private void wizardPage2_Initialize(object sender, AeroWizard.WizardPageInitEventArgs e)
@@ -283,6 +263,7 @@ namespace VendingServerInitialSetup
                             File.WriteAllText("pubkey.txt", Convert.ToBase64String(tmpkeys.PublicKey));
                             System.Diagnostics.Process.Start("pubkey.txt");
                         }
+                        rsaProvider.Dispose();
                         if (newsettings)
                         {
                             Accounts tmpacc = new Accounts()
@@ -379,6 +360,7 @@ namespace VendingServerInitialSetup
                         dbContextTransaction.Rollback();
                         MessageBox.Show("Ошибка сохранения настроек. Программа будет закрыта." + Environment.NewLine + "Exception: " + ex.Message + Environment.NewLine + "Inner exception: " + ex.InnerException?.Message, "FAIL", MessageBoxButtons.OK, MessageBoxIcon.Error);
                     }
+                    shaM.Dispose();
                 }
             }
         }
