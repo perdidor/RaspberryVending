@@ -44,6 +44,9 @@
             this.textBox1 = new System.Windows.Forms.TextBox();
             this.otpsecretpicture = new System.Windows.Forms.PictureBox();
             this.wizardPage3 = new AeroWizard.WizardPage();
+            this.setchartsdirbutton = new System.Windows.Forms.Button();
+            this.chartdirtextbox = new System.Windows.Forms.TextBox();
+            this.label15 = new System.Windows.Forms.Label();
             this.bingmapsapikeytextbox = new System.Windows.Forms.TextBox();
             this.label7 = new System.Windows.Forms.Label();
             this.sendernametextbox = new System.Windows.Forms.TextBox();
@@ -70,6 +73,7 @@
             this.label9 = new System.Windows.Forms.Label();
             this.fromemailtextbox = new System.Windows.Forms.TextBox();
             this.label8 = new System.Windows.Forms.Label();
+            this.chartsdirbrowser = new System.Windows.Forms.FolderBrowserDialog();
             ((System.ComponentModel.ISupportInitialize)(this.wizardControl1)).BeginInit();
             this.wizardPage1.SuspendLayout();
             this.wizardPage2.SuspendLayout();
@@ -222,6 +226,9 @@
             // wizardPage3
             // 
             this.wizardPage3.AllowNext = false;
+            this.wizardPage3.Controls.Add(this.setchartsdirbutton);
+            this.wizardPage3.Controls.Add(this.chartdirtextbox);
+            this.wizardPage3.Controls.Add(this.label15);
             this.wizardPage3.Controls.Add(this.bingmapsapikeytextbox);
             this.wizardPage3.Controls.Add(this.label7);
             this.wizardPage3.Controls.Add(this.sendernametextbox);
@@ -234,6 +241,34 @@
             this.wizardPage3.Size = new System.Drawing.Size(533, 200);
             this.wizardPage3.TabIndex = 2;
             this.wizardPage3.Text = "Step 3 of 4: system-wide variables";
+            // 
+            // setchartsdirbutton
+            // 
+            this.setchartsdirbutton.Location = new System.Drawing.Point(433, 163);
+            this.setchartsdirbutton.Name = "setchartsdirbutton";
+            this.setchartsdirbutton.Size = new System.Drawing.Size(82, 23);
+            this.setchartsdirbutton.TabIndex = 10;
+            this.setchartsdirbutton.Text = "set/change";
+            this.setchartsdirbutton.UseVisualStyleBackColor = true;
+            this.setchartsdirbutton.Click += new System.EventHandler(this.Setchartsdirbutton_Click);
+            // 
+            // chartdirtextbox
+            // 
+            this.chartdirtextbox.Location = new System.Drawing.Point(191, 164);
+            this.chartdirtextbox.Name = "chartdirtextbox";
+            this.chartdirtextbox.ReadOnly = true;
+            this.chartdirtextbox.Size = new System.Drawing.Size(236, 23);
+            this.chartdirtextbox.TabIndex = 9;
+            this.chartdirtextbox.Text = "C:\\TempImageFiles";
+            // 
+            // label15
+            // 
+            this.label15.AutoSize = true;
+            this.label15.Location = new System.Drawing.Point(10, 167);
+            this.label15.Name = "label15";
+            this.label15.Size = new System.Drawing.Size(128, 15);
+            this.label15.TabIndex = 8;
+            this.label15.Text = "Charts temp directory: ";
             // 
             // bingmapsapikeytextbox
             // 
@@ -364,7 +399,7 @@
             this.maillogincheckbox.CheckState = System.Windows.Forms.CheckState.Checked;
             this.maillogincheckbox.Location = new System.Drawing.Point(12, 165);
             this.maillogincheckbox.Name = "maillogincheckbox";
-            this.maillogincheckbox.Size = new System.Drawing.Size(92, 19);
+            this.maillogincheckbox.Size = new System.Drawing.Size(90, 19);
             this.maillogincheckbox.TabIndex = 21;
             this.maillogincheckbox.Text = "SMTP AUTH";
             this.maillogincheckbox.UseVisualStyleBackColor = true;
@@ -412,7 +447,7 @@
             this.label12.AutoSize = true;
             this.label12.Location = new System.Drawing.Point(264, 97);
             this.label12.Name = "label12";
-            this.label12.Size = new System.Drawing.Size(69, 15);
+            this.label12.Size = new System.Drawing.Size(68, 15);
             this.label12.TabIndex = 16;
             this.label12.Text = "SMTP port: ";
             // 
@@ -429,7 +464,7 @@
             this.label11.AutoSize = true;
             this.label11.Location = new System.Drawing.Point(9, 97);
             this.label11.Name = "label11";
-            this.label11.Size = new System.Drawing.Size(70, 15);
+            this.label11.Size = new System.Drawing.Size(69, 15);
             this.label11.TabIndex = 14;
             this.label11.Text = "SMTP host: ";
             // 
@@ -552,6 +587,10 @@
         private System.Windows.Forms.Label label8;
         private System.Windows.Forms.Button newotpsecretbutton;
         private System.Windows.Forms.Button testsmtpsettingsbutton;
+        private System.Windows.Forms.Button setchartsdirbutton;
+        private System.Windows.Forms.TextBox chartdirtextbox;
+        private System.Windows.Forms.Label label15;
+        private System.Windows.Forms.FolderBrowserDialog chartsdirbrowser;
     }
 }
 

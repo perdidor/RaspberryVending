@@ -167,9 +167,9 @@ namespace VendingServerInitialSetup
                     string cdtstr = dt.ToString("dd.MM.yyyy HH:mm:ss");
                     SHA512 shaM = new SHA512Managed();
                     byte[] HashedPsssword = shaM.ComputeHash(Encoding.UTF8.GetBytes(adminpasstextbox.Text));
-                    if (!SetFolderPermission(@"C:\TempImageFiles"))
+                    if (!SetFolderPermission(chartdirtextbox.Text))
                     {
-                        MessageBox.Show(@"Unable to create or set 'FULL ACCESS' permissions for user 'IIS AppPool\DefaultAppPool' on folder 'C:\TempImageFiles'. You have to set it manually or web charts will not work.", "Folder permissions", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                        MessageBox.Show(@"Unable to create or set 'FULL ACCESS' permissions for user 'IIS AppPool\DefaultAppPool' on folder '" + chartdirtextbox.Text + "'. You have to set it manually or web charts will not work.", "Folder permissions", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                     }
                     try
                     {
@@ -412,6 +412,14 @@ namespace VendingServerInitialSetup
             }
             Cursor.Current = Cursors.AppStarting;
             wizardPage4.Enabled = true;
+        }
+
+        private void Setchartsdirbutton_Click(object sender, EventArgs e)
+        {
+            if (chartsdirbrowser.ShowDialog() == DialogResult.OK && chartsdirbrowser.SelectedPath != "")
+            {
+                chartdirtextbox.Text = chartsdirbrowser.SelectedPath;
+            }
         }
     }
 }
