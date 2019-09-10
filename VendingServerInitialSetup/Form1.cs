@@ -74,23 +74,6 @@ namespace VendingServerInitialSetup
                                 settings.ConnectionStrings["VendingEntities"].ConnectionString = entityconnstr;
                                 appconfigFile.Save(System.Configuration.ConfigurationSaveMode.Modified);
                                 System.Configuration.ConfigurationManager.RefreshSection(appconfigFile.AppSettings.SectionInformation.Name);
-                                using (OpenFileDialog ofd = new OpenFileDialog()
-                                {
-                                    AddExtension = true,
-                                    Filter = "config files | web.config",
-                                    FilterIndex = 0,
-                                    Title = "Укажите файл конфигурации сервера (обычно располагается в корне сайта)",
-                                    InitialDirectory = "C:\\inetpub\\wwwroot"
-                                })
-                                {
-                                    if (ofd.ShowDialog() == DialogResult.OK && ofd.CheckFileExists)
-                                    {
-                                        var config = XDocument.Load(ofd.FileName);
-                                        var targetNode = config.Root.Element("connectionStrings").Element("add").Attribute("connectionString");
-                                        targetNode.Value = string.Concat("metadata=res://*/App_Code.VendingModel.csdl|res://*/App_Code.VendingModel.ssdl|res://*/App_Code.VendingModel.msl;provider=System.Data.SqlClient;provider connection string=\"", sqlconnstr, ";MultipleActiveResultSets=True;App=EntityFramework\"");
-                                        config.Save(ofd.FileName);
-                                    }
-                                }
                             }
                             WebSettings extmpws = null;
                             try
@@ -234,6 +217,10 @@ namespace VendingServerInitialSetup
                     {
                         MessageBox.Show(@"Невозможно установить разрешения 'FULL ACCESS' для пользователя 'IIS AppPool\DefaultAppPool' на каталог '" + chartdirtextbox.Text + "'. Необходимо сделать это вручную, в противном случае на сайте не будут показываться графики.", "Установка разрешений на каталог", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                     }
+                    if (!EditAndSaveWebConfig())
+                    {
+                        MessageBox.Show(@"Невозможно открыть или сохранить файл конфигурации веб-приложения", "Сохранение веб-конфигурации", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    }
                     try
                     {
                         CspParameters cspParams = new CspParameters
@@ -363,6 +350,44 @@ namespace VendingServerInitialSetup
                     shaM.Dispose();
                 }
             }
+        }
+
+        private bool EditAndSaveWebConfig()
+        {
+            bool res = true;
+            try
+            {
+                using (OpenFileDialog ofd = new OpenFileDialog()
+                {
+                    AddExtension = true,
+                    Filter = "config files | web.config",
+                    FilterIndex = 0,
+                    Title = "Укажите файл конфигурации сервера (обычно располагается в корне сайта)",
+                    InitialDirectory = "C:\\inetpub\\wwwroot"
+                })
+                {
+                    if (ofd.ShowDialog() == DialogResult.OK && ofd.CheckFileExists)
+                    {
+                        var config = XDocument.Load(ofd.FileName);
+                        if (sqlconnstr != "")
+                        {
+                            var cstargetNode = config.Root.Element("connectionStrings").Element("add").Attribute("connectionString");
+                            cstargetNode.Value = string.Concat("metadata=res://*/App_Code.VendingModel.csdl|res://*/App_Code.VendingModel.ssdl|res://*/App_Code.VendingModel.msl;provider=System.Data.SqlClient;provider connection string=\"", sqlconnstr, ";MultipleActiveResultSets=True;App=EntityFramework\"");
+                        }
+                        var tftargetNode = config.Root.Element("appSettings").Elements().ToList();
+                        foreach (var item in tftargetNode)
+                        {
+                            if (item.Attribute("key").Value == "ChartImageHandler") item.Attribute("value").Value = string.Concat("storage=file;timeout=20;dir=", chartdirtextbox.Text, @"\;");
+                        }
+                        config.Save(ofd.FileName);
+                    }
+                }
+            }
+            catch
+            {
+                res = false;
+            }
+            return res;
         }
 
         private void newotpsecretbutton_Click(object sender, EventArgs e)
