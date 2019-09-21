@@ -772,14 +772,27 @@ namespace RPiVendApp
                         {
                             StartPage.SystemState.WaterTempCelsius = BitConverter.ToSingle(tmptemp1, 0);
                             StartPage.SystemState.InboxTempCelsius = BitConverter.ToSingle(tmptemp2, 0);
-                            ServiceModePage.ServiceModePageInstance.watertempaddress.Text = String.Join(String.Empty, Array.ConvertAll(tmpaddr1, x => x.ToString("X2")));
-                            ServiceModePage.ServiceModePageInstance.inboxtempaddress.Text = String.Join(String.Empty, Array.ConvertAll(tmpaddr2, x => x.ToString("X2")));
-                        } else 
+                            if (StartPage.CurrentState == StartPage.States.ServiceMode)
+                            {
+                                await CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+                                {
+                                    ServiceModePage.ServiceModePageInstance.watertempaddress.Text = String.Join(String.Empty, Array.ConvertAll(tmpaddr1, x => x.ToString("X2")));
+                                    ServiceModePage.ServiceModePageInstance.inboxtempaddress.Text = String.Join(String.Empty, Array.ConvertAll(tmpaddr2, x => x.ToString("X2")));
+                                });
+                            }
+                        }
+                        else
                         {
                             StartPage.SystemState.WaterTempCelsius = BitConverter.ToSingle(tmptemp2, 0);
                             StartPage.SystemState.InboxTempCelsius = BitConverter.ToSingle(tmptemp1, 0);
-                            ServiceModePage.ServiceModePageInstance.inboxtempaddress.Text = String.Join(String.Empty, Array.ConvertAll(tmpaddr1, x => x.ToString("X2")));
-                            ServiceModePage.ServiceModePageInstance.watertempaddress.Text = String.Join(String.Empty, Array.ConvertAll(tmpaddr2, x => x.ToString("X2")));
+                            if (StartPage.CurrentState == StartPage.States.ServiceMode)
+                            {
+                                await CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+                                {
+                                    ServiceModePage.ServiceModePageInstance.inboxtempaddress.Text = String.Join(String.Empty, Array.ConvertAll(tmpaddr1, x => x.ToString("X2")));
+                                    ServiceModePage.ServiceModePageInstance.watertempaddress.Text = String.Join(String.Empty, Array.ConvertAll(tmpaddr2, x => x.ToString("X2")));
+                                });
+                            }
                         }
                         StartPage.SystemState.AmbientTempCelsius = BitConverter.ToSingle(tmpambtemp, 0);
                         StartPage.SystemState.AmbientRelativeHumidity = BitConverter.ToSingle(tmpambhum, 0);
